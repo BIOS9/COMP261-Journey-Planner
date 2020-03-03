@@ -1,8 +1,16 @@
 package gui;
 
+import common.Stop;
+import io.JourneyReader;
+import search.StopSearcher;
+
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.Collection;
 
 /**
  * This is a gui.GUI class that displays a journey and allows a user to edit it.
@@ -10,6 +18,8 @@ import java.io.File;
  * @author Matthew Corfiatis
  */
 public class JourneyPlanner extends GUI {
+    private StopSearcher stopSearcher;
+
     @Override
     protected void redraw(Graphics g) {
 
@@ -32,6 +42,22 @@ public class JourneyPlanner extends GUI {
 
     @Override
     protected void onLoad(File stopFile, File tripFile) {
+        try {
+            Collection<Stop> stops = JourneyReader.getConnectedStops(stopFile, tripFile);
 
+            stopSearcher = new StopSearcher(stops);
+
+            stopSearcher.printTrie();
+
+            System.out.println("Done");
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, "There was an error reading one of the files: " + ex.getMessage(), "Error Reading File", JOptionPane.ERROR_MESSAGE);
+        } catch (ParseException ex) {
+            JOptionPane.showMessageDialog(null, "Invalid data encountered while reading one of the files: " + ex.getMessage(), "Error Parsing File", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public static void main(String[] args) {
+        new JourneyPlanner();
     }
 }

@@ -4,6 +4,7 @@ import common.Location;
 import common.Stop;
 import common.Trip;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.FileReader;
 import java.io.BufferedReader;
@@ -24,15 +25,15 @@ public class JourneyReader {
      * Reads stops and trips from file, then connects stops using the
      * information from the set of trips.
      *
-     * @param stopsFilePath File path of the stops file to load.
-     * @param tripsFilePath File path of the trips file to load.
+     * @param stopsFile Stops file to load.
+     * @param tripsFile Trips file to load.
      * @throws IOException When an error occurs finding or reading the specified file.
      * @throws ParseException When the data does not meet the expected format.
      * @return A collection containing all of the stops linked together with trip information.
      */
-    public static Collection<Stop> getConnectedStops(String stopsFilePath, String tripsFilePath) throws IOException, ParseException {
-        Map<String, Stop> stops = readStops(stopsFilePath);
-        Map<Trip, String[]> trips = readTrips(tripsFilePath);
+    public static Collection<Stop> getConnectedStops(File stopsFile, File tripsFile) throws IOException, ParseException {
+        Map<String, Stop> stops = readStops(stopsFile);
+        Map<Trip, String[]> trips = readTrips(tripsFile);
 
         for (Map.Entry<Trip, String[]> tripEntry : trips.entrySet()) {
             Stop previousStop = null;
@@ -53,16 +54,17 @@ public class JourneyReader {
                     // in any direction.
                     stop.makeConnection(previousStop, tripEntry.getKey());
                     previousStop.makeConnection(stop, tripEntry.getKey());
-                    previousStop.lockConnections();
                 }
 
                 previousStop = stop;
             }
 
-            // Prevent further modification.
-            if(previousStop != null)
-                previousStop.lockConnections();
             tripEntry.getKey().lockStops();
+        }
+
+        // Prevent further modification of the stops.
+        for(Stop stop : stops.values()) {
+            stop.lockConnections();
         }
 
         return stops.values();
@@ -72,13 +74,13 @@ public class JourneyReader {
     /**
      * Reads stops from a file into a map.
      *
-     * @param filePath Path of the file to load/read.
+     * @param file File to read.
      * @throws IOException When an error occurs finding or reading the specified file.
      * @throws ParseException When the data does not meet the expected format.
      * @return Map with the Stop ID as the key and Stop object as the value.
      */
-    private static Map<String, Stop> readStops(String filePath) throws IOException, ParseException {
-        BufferedReader reader = new BufferedReader(new FileReader(filePath));
+    private static Map<String, Stop> readStops(File file) throws IOException, ParseException {
+        BufferedReader reader = new BufferedReader(new FileReader(file));
         Map<String, Stop> stops = new HashMap<>();
 
         reader.readLine(); // Skip the file header
@@ -100,13 +102,13 @@ public class JourneyReader {
 
             // Ensure latitude and longitude are doubles.
             try {
-                latitude = Integer.parseInt(tokens[2]);
+                latitude = Double.parseDouble(tokens[2]);
             } catch (NumberFormatException ex) {
                 throw new ParseException(String.format("Invalid latitude on line %d. Expected double, got %s", lineNum, tokens[2]), lineNum);
             }
 
             try {
-                longitude = Integer.parseInt(tokens[3]);
+                longitude = Double.parseDouble(tokens[3]);
             } catch (NumberFormatException ex) {
                 throw new ParseException(String.format("Invalid longitude on line %d. Expected double, got %s", lineNum, tokens[3]), lineNum);
             }
@@ -122,13 +124,13 @@ public class JourneyReader {
     /**
      * Reads trips from a file into a map.
      *
-     * @param filePath Path of the file to load/read.
+     * @param file File to read.
      * @throws IOException When an error occurs finding or reading the specified file.
      * @throws ParseException When the data does not meet the expected format.
      * @return Map of trips where the key is the trip and the value is an array of stops.
      */
-    private static Map<Trip, String[]> readTrips(String filePath) throws IOException, ParseException {
-        BufferedReader reader = new BufferedReader(new FileReader(filePath));
+    private static Map<Trip, String[]> readTrips(File file) throws IOException, ParseException {
+        BufferedReader reader = new BufferedReader(new FileReader(file));
         Map<Trip, String[]> trips = new HashMap<>();
 
         reader.readLine(); // Skip the file header

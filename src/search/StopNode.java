@@ -2,6 +2,7 @@ package search;
 
 import common.Stop;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -82,6 +83,14 @@ class StopNode {
      */
     public StopNode getChild(char c) {
         return children.get(c);
+    }
+
+    /**
+     * Returns collection of all children with a depth of one.
+     * @return Children.
+     */
+    public Collection<StopNode> getChildren() {
+        return children.values();
     }
 
     /**
