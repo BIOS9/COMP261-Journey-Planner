@@ -64,4 +64,36 @@ class StopNode {
     public boolean hasStop() {
         return stop != null;
     }
+
+    /**
+     * Checks if a child with the character exists.
+     * @param c Character of the child.
+     * @return Boolean indicating if it exists.
+     */
+    public boolean hasChild(char c) {
+        return children.containsKey(c);
+    }
+
+    /**
+     * Returns a child with the specified name character.
+     * @param c Character of the child.
+     * @return Child stop node or null if no child exists
+     * with the specified name character.
+     */
+    public StopNode getChild(char c) {
+        return children.get(c);
+    }
+
+    /**
+     * Adds a stop node as a child.
+     * @param c Name character for the new node.
+     * @param node The node to add.
+     * @return Added node or null if add failed because of existing StopNode.
+     */
+    public StopNode addChild(char c, StopNode node) {
+        if(children.putIfAbsent(c, node) == null)
+            return node;
+        else
+            return null;
+    }
 }
