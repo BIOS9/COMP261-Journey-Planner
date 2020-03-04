@@ -1,6 +1,7 @@
 package search;
 
 import common.Stop;
+import sun.awt.X11.XSystemTrayPeer;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -61,6 +62,12 @@ public class StopSearcher {
             return matches;
         }
 
+        if(node.hasStop()) {
+            Stop stop = node.getStop();
+            matches.add(new PrefixMatch(node.isId() ? stop.getId() : stop.getName(), stop));
+            return matches;
+        }
+
         // Depth first search for leaf nodes.
         Stack<StopNode> searchNodes = new Stack<>();
         searchNodes.push(node);
@@ -115,6 +122,9 @@ public class StopSearcher {
 
         // Add stop ID's and names to the trie.
         for (Stop stop : stops) {
+            if(stop.getName().equals("app")) {
+                System.out.println("A");
+            }
             addStop(stop, stop.getId().toLowerCase(), true);
             addStop(stop, stop.getName().toLowerCase(), false);
         }
@@ -162,6 +172,9 @@ public class StopSearcher {
 
         // Add leaf node.
         char finalChar = chars[chars.length - 1];
+
+        // TODO: Restructure nodes to contain result nodes
+        // TODO: Fix unable to add "app" because "apple" already exists, cant add multiple nodes to same path. Nodes need to have collection of matched stopNodes so multiple can be added
         node.addChild(finalChar, new StopNode(finalChar, stop, isId));
     }
 }

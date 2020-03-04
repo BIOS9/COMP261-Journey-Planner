@@ -1,9 +1,11 @@
 package gui;
 
+import com.sun.imageio.plugins.wbmp.WBMPImageReader;
 import common.Location;
 import common.Stop;
 import io.JourneyReader;
 import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
+import search.PrefixMatch;
 import search.StopSearcher;
 
 import javax.swing.*;
@@ -14,7 +16,9 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -25,6 +29,7 @@ import java.util.stream.Collectors;
 public class JourneyPlanner extends GUI {
     private StopSearcher stopSearcher;
     private Collection<Stop> stops;
+    private Set<Stop> selectedStops = new HashSet<>();
 
     private static final double ZOOM_SCALE_CHANGE = 0.3;
     private static final double ZOOM_SCROLL_SCALE_CHANGE = 0.1;
@@ -42,7 +47,7 @@ public class JourneyPlanner extends GUI {
         if(stops == null)
             return;
 
-        g.setColor(Color.BLACK);
+
 
         Dimension drawingAreaSize = getDrawingAreaDimension();
         Location origin = new Location(originX, originY);
@@ -50,11 +55,16 @@ public class JourneyPlanner extends GUI {
         int size = 5;
 
         for(Stop stop : stops) {
+            if(selectedStops.contains(stop))
+                g.setColor(Color.RED);
+            else
+                g.setColor(Color.BLACK);
+
             Point point = stop.getLocation().asPoint(origin, scale);
             point.x += drawingAreaSize.width / 2;
             point.y += drawingAreaSize.height / 2;
 
-            g.fillRect(point.x, drawingAreaSize.height - point.y, size, size);
+            g.fillRect(point.x, point.y, size, size);
         }
     }
 
@@ -65,9 +75,8 @@ public class JourneyPlanner extends GUI {
 
     @Override
     protected void onMouseDragged(double draggedX, double draggedY) {
-        //System.out.println(draggedX);
         originX = dragStartOriginX - draggedX / scale;
-        originY = dragStartOriginY - draggedY / scale;
+        originY = dragStartOriginY + draggedY / scale;
     }
 
     @Override
@@ -87,9 +96,11 @@ public class JourneyPlanner extends GUI {
             return;
 
         String query = getSearchBox().getText();
-        String result = stopSearcher.searchPrefix(query).stream().map(Objects::toString).collect(Collectors.joining("\n"));
-
+        Collection<PrefixMatch> stops = stopSearcher.searchPrefix(query);
+        String result = stops.stream().map(Objects::toString).collect(Collectors.joining("\n"));
+        selectedStops = stops.stream().map(x -> x.getStop()).collect(Collectors.toSet());
         getTextOutputArea().setText(result);
+        redraw();
     }
 
     @Override
@@ -117,10 +128,10 @@ public class JourneyPlanner extends GUI {
                 break;
 
             case NORTH:
-                originY -= MOVE_CHANGE / scale;
+                originY += MOVE_CHANGE / scale;
                 break;
             case SOUTH:
-                originY += MOVE_CHANGE / scale;
+                originY -= MOVE_CHANGE / scale;
                 break;
             case EAST:
                 originX += MOVE_CHANGE / scale;
@@ -136,6 +147,7 @@ public class JourneyPlanner extends GUI {
         try {
             stops = JourneyReader.getConnectedStops(stopFile, tripFile);
             stopSearcher = new StopSearcher(stops);
+            System.out.println();
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(null, "There was an error reading one of the files: " + ex.getMessage(), "Error Reading File", JOptionPane.ERROR_MESSAGE);
         } catch (ParseException ex) {
