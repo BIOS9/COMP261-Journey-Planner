@@ -3,6 +3,7 @@ package gui;
 import common.Location;
 import common.Stop;
 import io.JourneyReader;
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 import search.StopSearcher;
 
 import javax.swing.*;
@@ -33,6 +34,8 @@ public class JourneyPlanner extends GUI {
     private double scale = 20;
     private double originX = 0;
     private double originY = 0;
+    private double dragStartOriginX = 0;
+    private double dragStartOriginY = 0;
 
     @Override
     protected void redraw(Graphics g) {
@@ -57,6 +60,24 @@ public class JourneyPlanner extends GUI {
 
     @Override
     protected void onClick(MouseEvent e) {
+
+    }
+
+    @Override
+    protected void onMouseDragged(double draggedX, double draggedY) {
+        //System.out.println(draggedX);
+        originX = dragStartOriginX - draggedX / scale;
+        originY = dragStartOriginY - draggedY / scale;
+    }
+
+    @Override
+    protected void onMouseDragStart() {
+        dragStartOriginX = originX;
+        dragStartOriginY = originY;
+    }
+
+    @Override
+    protected void onMouseDragStop() {
 
     }
 

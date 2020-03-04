@@ -71,6 +71,16 @@ public class SquaresExample extends GUI {
 	}
 
 	@Override
+	protected void onMouseDragStart() {
+
+	}
+
+	@Override
+	protected void onMouseDragStop() {
+
+	}
+
+	@Override
 	protected void onMove(Move m) {
 		makeSquares();
 	}
@@ -83,6 +93,11 @@ public class SquaresExample extends GUI {
 	@Override
 	protected void onMouseWheelMove(MouseWheelEvent e) {
 		System.out.println(e.getScrollAmount());
+	}
+
+	@Override
+	protected void onMouseDragged(double draggedX, double draggedY) {
+
 	}
 
 	/**

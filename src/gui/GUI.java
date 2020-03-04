@@ -1,5 +1,7 @@
 package gui;
 
+import sun.awt.X11.XSystemTrayPeer;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -85,6 +87,22 @@ public abstract class GUI {
 	protected abstract void onMouseWheelMove(MouseWheelEvent e);
 
 	/**
+	 * Is called whenever the mouse is dragged on the drawing area.
+	 */
+	protected abstract void onMouseDragged(double draggedX, double draggedY);
+
+	/**
+	 * Is called whenever the mouse starts dragging.
+	 */
+	protected abstract void onMouseDragStart();
+
+	/**
+	 * Is called whenever the mouse stops dragging.
+	 */
+	protected abstract void onMouseDragStop();
+
+
+	/**
 	 * Is called when the user has successfully selected a directory to load the
 	 * data files from.
 	 * 
@@ -164,6 +182,9 @@ public abstract class GUI {
 
 	private JTextField search;
 	private JFileChooser fileChooser;
+
+	private double mouseDownX = 0;
+	private double mouseDownY = 0;
 
 	public GUI() {
 		initialise();
@@ -371,14 +392,28 @@ public abstract class GUI {
 
 		drawing.addMouseListener(new MouseAdapter() {
 			public void mouseReleased(MouseEvent e) {
+				onMouseDragStop();
 				onClick(e);
 				redraw();
+			}
+
+			public void mousePressed(MouseEvent mouseEvent) {
+				onMouseDragStart();
+				mouseDownX = mouseEvent.getX();
+				mouseDownY = mouseEvent.getY();
 			}
 		});
 
 		drawing.addMouseWheelListener(new MouseAdapter() {
 			public void mouseWheelMoved(MouseWheelEvent e) {
 				onMouseWheelMove(e);
+				redraw();
+			}
+		});
+
+		drawing.addMouseMotionListener(new MouseAdapter() {
+			public void mouseDragged(MouseEvent mouseEvent) {
+				onMouseDragged(mouseEvent.getX() - mouseDownX, mouseEvent.getY() - mouseDownY);
 				redraw();
 			}
 		});
