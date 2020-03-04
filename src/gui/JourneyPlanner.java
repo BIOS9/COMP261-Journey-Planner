@@ -1,5 +1,6 @@
 package gui;
 
+import common.Location;
 import common.Stop;
 import io.JourneyReader;
 import search.StopSearcher;
@@ -21,10 +22,35 @@ import java.util.stream.Collectors;
  */
 public class JourneyPlanner extends GUI {
     private StopSearcher stopSearcher;
+    private Collection<Stop> stops;
+
+    private static final double ZOOM_SCALE_CHANGE = 0.1;
+    private static final double MIN_SCALE = 1;
+    private static final double MAX_SCALE = 1000;
+    private static final double MOVE_CHANGE = 30;
+    private double scale = 20;
+    private double originX = 0;
+    private double originY = 0;
 
     @Override
     protected void redraw(Graphics g) {
+        if(stops == null)
+            return;
 
+        g.setColor(Color.BLACK);
+
+        Dimension drawingAreaSize = getDrawingAreaDimension();
+        Location origin = new Location(originX, originY);
+
+        int size = 5;
+
+        for(Stop stop : stops) {
+            Point point = stop.getLocation().asPoint(origin, scale);
+            point.x += drawingAreaSize.width / 2;
+            point.y += drawingAreaSize.height / 2;
+
+            g.fillRect(point.x, drawingAreaSize.height - point.y, size, size);
+        }
     }
 
     @Override
@@ -45,13 +71,37 @@ public class JourneyPlanner extends GUI {
 
     @Override
     protected void onMove(GUI.Move m) {
+        switch(m) {
+            case ZOOM_IN:
+                scale += ZOOM_SCALE_CHANGE * scale; // Scale multiplication normalizes zooming so the zooming speed remains constant.
+                if(scale > MAX_SCALE)
+                    scale = MAX_SCALE;
+                break;
+            case ZOOM_OUT:
+                scale -= ZOOM_SCALE_CHANGE * scale;
+                if(scale < MIN_SCALE)
+                    scale = MIN_SCALE;
+                break;
 
+            case NORTH:
+                originY -= MOVE_CHANGE / scale;
+                break;
+            case SOUTH:
+                originY += MOVE_CHANGE / scale;
+                break;
+            case EAST:
+                originX += MOVE_CHANGE / scale;
+                break;
+            case WEST:
+                originX -= MOVE_CHANGE / scale;
+                break;
+        }
     }
 
     @Override
     protected void onLoad(File stopFile, File tripFile) {
         try {
-            Collection<Stop> stops = JourneyReader.getConnectedStops(stopFile, tripFile);
+            stops = JourneyReader.getConnectedStops(stopFile, tripFile);
             stopSearcher = new StopSearcher(stops);
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(null, "There was an error reading one of the files: " + ex.getMessage(), "Error Reading File", JOptionPane.ERROR_MESSAGE);
