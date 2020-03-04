@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -77,6 +78,11 @@ public class SquaresExample extends GUI {
 	@Override
 	protected void onLoad(File stopFile, File tripFile) {
 		getTextOutputArea().setText("example doesn't load any files.");
+	}
+
+	@Override
+	protected void onMouseWheelMove(MouseWheelEvent e) {
+		System.out.println(e.getScrollAmount());
 	}
 
 	/**

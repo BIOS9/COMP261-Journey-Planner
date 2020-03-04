@@ -8,6 +8,7 @@ import search.StopSearcher;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
@@ -24,7 +25,8 @@ public class JourneyPlanner extends GUI {
     private StopSearcher stopSearcher;
     private Collection<Stop> stops;
 
-    private static final double ZOOM_SCALE_CHANGE = 0.1;
+    private static final double ZOOM_SCALE_CHANGE = 0.3;
+    private static final double ZOOM_SCROLL_SCALE_CHANGE = 0.1;
     private static final double MIN_SCALE = 1;
     private static final double MAX_SCALE = 1000;
     private static final double MOVE_CHANGE = 30;
@@ -67,6 +69,16 @@ public class JourneyPlanner extends GUI {
         String result = stopSearcher.searchPrefix(query).stream().map(Objects::toString).collect(Collectors.joining("\n"));
 
         getTextOutputArea().setText(result);
+    }
+
+    @Override
+    protected void onMouseWheelMove(MouseWheelEvent e) {
+        scale -= e.getWheelRotation() * ZOOM_SCROLL_SCALE_CHANGE * scale;
+
+        if(scale > MAX_SCALE)
+            scale = MAX_SCALE;
+        if(scale < MIN_SCALE)
+            scale = MIN_SCALE;
     }
 
     @Override

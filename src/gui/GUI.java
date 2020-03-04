@@ -79,6 +79,12 @@ public abstract class GUI {
 	protected abstract void onMove(Move m);
 
 	/**
+	 * Is called whenever the mouse wheel is scrolled. This can be used for
+	 * zooming the map.
+	 */
+	protected abstract void onMouseWheelMove(MouseWheelEvent e);
+
+	/**
 	 * Is called when the user has successfully selected a directory to load the
 	 * data files from.
 	 * 
@@ -372,7 +378,8 @@ public abstract class GUI {
 
 		drawing.addMouseWheelListener(new MouseAdapter() {
 			public void mouseWheelMoved(MouseWheelEvent e) {
-
+				onMouseWheelMove(e);
+				redraw();
 			}
 		});
 
