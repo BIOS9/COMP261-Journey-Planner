@@ -3,14 +3,14 @@ package search;
 import common.Stop;
 
 /**
- * A matched search and the stop that matches the prefix
+ * A search result for a prefix search and the stop that matches the prefix
  */
 public class PrefixMatch {
     private final String tokenMatched;
     private final Stop stop;
 
-    public PrefixMatch(String prefixMatched, Stop stop) {
-        this.tokenMatched = prefixMatched;
+    public PrefixMatch(String tokenMatched, Stop stop) {
+        this.tokenMatched = tokenMatched;
         this.stop = stop;
     }
 
@@ -24,6 +24,6 @@ public class PrefixMatch {
 
     @Override
     public String toString() {
-        return tokenMatched;
+        return getTokenMatched();
     }
 }

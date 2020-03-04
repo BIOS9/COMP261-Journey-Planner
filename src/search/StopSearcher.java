@@ -113,6 +113,7 @@ public class StopSearcher {
         if (stops == null)
             throw new IllegalArgumentException("Stops must not be null.");
 
+        // Add stop ID's and names to the trie.
         for (Stop stop : stops) {
             addStop(stop, stop.getId().toLowerCase(), true);
             addStop(stop, stop.getName().toLowerCase(), false);

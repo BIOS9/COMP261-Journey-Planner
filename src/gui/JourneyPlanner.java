@@ -52,12 +52,7 @@ public class JourneyPlanner extends GUI {
     protected void onLoad(File stopFile, File tripFile) {
         try {
             Collection<Stop> stops = JourneyReader.getConnectedStops(stopFile, tripFile);
-
             stopSearcher = new StopSearcher(stops);
-
-            stopSearcher.printTrie();
-
-            System.out.println("Done");
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(null, "There was an error reading one of the files: " + ex.getMessage(), "Error Reading File", JOptionPane.ERROR_MESSAGE);
         } catch (ParseException ex) {
