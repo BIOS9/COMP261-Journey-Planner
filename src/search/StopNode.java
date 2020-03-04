@@ -14,6 +14,7 @@ import java.util.Map;
  */
 class StopNode {
     private final boolean isRoot;
+    private final boolean isId;
     private final char nameCharacter;
     private final Stop stop;
     private final Map<Character, StopNode> children = new HashMap<>();
@@ -23,9 +24,10 @@ class StopNode {
      * Constructor for constructing a root node.
      */
     public StopNode() {
-        isRoot = true;
-        nameCharacter = 0;
-        stop = null;
+        this.isRoot = true;
+        this.nameCharacter = 0;
+        this.stop = null;
+        this.isId = false;
     }
 
     /**
@@ -33,20 +35,23 @@ class StopNode {
      * @param nameCharacter Character in the bus stop name.
      */
     public StopNode(char nameCharacter) {
-        isRoot = false;
+        this.isRoot = false;
         this.nameCharacter = nameCharacter;
         this.stop = null;
+        this.isId = false;
     }
 
     /**
      * Constructor for constructing a leaf node.
      * @param nameCharacter Character in the bus stop name.
      * @param stop Stop to store.
+     * @param isId Whether the prefix is a stop ID instead of a stop name.
      */
-    public StopNode(char nameCharacter, Stop stop) {
-        isRoot = false;
+    public StopNode(char nameCharacter, Stop stop, boolean isId) {
+        this.isRoot = false;
         this.nameCharacter = nameCharacter;
         this.stop = stop;
+        this.isId = isId;
     }
 
     public char getNameCharacter() {
@@ -55,6 +60,10 @@ class StopNode {
 
     public Stop getStop() {
         return stop;
+    }
+
+    public boolean isId() {
+        return isId;
     }
 
     /**
@@ -98,11 +107,22 @@ class StopNode {
      * @param c Name character for the new node.
      * @param node The node to add.
      * @return Added node or null if add failed because of existing StopNode.
+     * @throws IllegalAccessError When this method is called but the node has been locked immutable.
      */
-    public StopNode addChild(char c, StopNode node) {
+    public StopNode addChild(char c, StopNode node) throws IllegalAccessError {
+        if(childrenLocked)
+            throw new IllegalAccessError("Cannot add child node to locked node.");
+
         if(children.putIfAbsent(c, node) == null)
             return node;
         else
             return null;
+    }
+
+    /**
+     * Prevents modification of this node.
+     */
+    public void lockChildren() {
+        childrenLocked = true;
     }
 }

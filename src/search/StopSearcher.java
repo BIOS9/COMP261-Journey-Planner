@@ -4,6 +4,8 @@ import common.Stop;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Stack;
 
 /**
  * Manages indexing and searching for bus stops in the journey.
@@ -16,6 +18,7 @@ public class StopSearcher {
     /**
      * Creates a StopSearcher object and indexes the provided stops to
      * allow easy searching.
+     *
      * @param stops Stops to be indexed.
      */
     public StopSearcher(Collection<Stop> stops) {
@@ -24,7 +27,7 @@ public class StopSearcher {
 
     /**
      * Searches for stops by name.
-     *
+     * <p>
      * If one stop name exactly matches the provided value, only that
      * one stop will be returned.
      * If multiple stops match, multiple stops will be returned.
@@ -32,9 +35,51 @@ public class StopSearcher {
      * @param name Name prefix to search for.
      * @return A collection of stops matching the name prefix.
      */
-    public Collection<Stop> searchName(String name) {
-        // TODO: Return the collection of stops.
-        return null;
+    public Collection<PrefixMatch> searchPrefix(String name) {
+        List<PrefixMatch> matches = new ArrayList<>();
+
+        if (name == null || name.length() == 0)
+            return matches;
+
+
+        String query = name.toLowerCase();
+        StopNode node = trieRoot;
+        boolean resultsFound = true;
+
+        // Find node with path matching search prefix.
+        for (int i = 0; i < query.length(); ++i) {
+            if (node.hasChild(query.charAt(i))) {
+                node = node.getChild(query.charAt(i));
+            } else {
+                resultsFound = false;
+                break;
+            }
+        }
+
+        if (!resultsFound) {
+            matches.add(new PrefixMatch("No results found.", null));
+            return matches;
+        }
+
+        // Depth first search for leaf nodes.
+        Stack<StopNode> searchNodes = new Stack<>();
+        searchNodes.push(node);
+
+        while (!searchNodes.isEmpty()) {
+            StopNode searchNode = searchNodes.pop();
+
+            if (searchNode.hasStop()) {
+                Stop stop = searchNode.getStop();
+                PrefixMatch match = new PrefixMatch(searchNode.isId() ? stop.getId() : stop.getName(), stop);
+                matches.add(match);
+            } else {
+                for (StopNode childNode : searchNode.getChildren()) {
+                    searchNodes.push(childNode);
+                }
+            }
+        }
+
+        return matches;
     }
 
     /**
@@ -46,44 +91,61 @@ public class StopSearcher {
 
     /**
      * Prints a node and all its children to the console.
-     * @param node Node to print.
+     *
+     * @param node  Node to print.
      * @param space Recursive space.
      */
     private void printNodes(StopNode node, String space) {
         System.out.print(space);
         System.out.println(node.getNameCharacter());
 
-        for(StopNode child : node.getChildren()) {
+        for (StopNode child : node.getChildren()) {
             printNodes(child, space + "  ");
         }
     }
 
     /**
      * Builds search trie from collection of stops.
+     *
      * @param stops Collection of stops to build trie from.
      */
     private void buildTrie(Collection<Stop> stops) {
-        if(stops == null)
+        if (stops == null)
             throw new IllegalArgumentException("Stops must not be null.");
 
-        for(Stop stop : stops) {
-            addStop(stop, stop.getId());
-            addStop(stop, stop.getName());
+        for (Stop stop : stops) {
+            addStop(stop, stop.getId().toLowerCase(), true);
+            addStop(stop, stop.getName().toLowerCase(), false);
+        }
+
+        // Depth first traversal.
+        Stack<StopNode> nodes = new Stack<>();
+        nodes.push(trieRoot);
+
+        // Lock all nodes to prevent modification (make immutable).
+        while (!nodes.isEmpty()) {
+            StopNode node = nodes.pop();
+            node.lockChildren();
+
+            for (StopNode childNode : node.getChildren()) {
+                nodes.push(childNode);
+            }
         }
     }
 
     /**
      * Adds a stop to the search trie.
+     *
      * @param stop Stop to add.
      * @param tag  Tag to add the stop as. (Name or ID)
      */
-    private void addStop(Stop stop, String tag) {
+    private void addStop(Stop stop, String tag, boolean isId) {
         StopNode node = trieRoot;
 
-        if(stop == null)
+        if (stop == null)
             throw new IllegalArgumentException("Stop must not be null.");
 
-        if(tag == null || tag.length() < 1)
+        if (tag == null || tag.length() < 1)
             throw new IllegalArgumentException("Cannot add a node with no name.");
 
         // Add path to leaf node
@@ -91,7 +153,7 @@ public class StopSearcher {
 
         for (int i = 0; i < chars.length - 1; ++i) {
             char c = chars[i];
-            if(node.hasChild(c))
+            if (node.hasChild(c))
                 node = node.getChild(c);
             else
                 node = node.addChild(c, new StopNode(c));
@@ -99,6 +161,6 @@ public class StopSearcher {
 
         // Add leaf node.
         char finalChar = chars[chars.length - 1];
-        node.addChild(finalChar, new StopNode(finalChar, stop));
+        node.addChild(finalChar, new StopNode(finalChar, stop, isId));
     }
 }

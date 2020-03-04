@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collection;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * This is a gui.GUI class that displays a journey and allows a user to edit it.
@@ -32,7 +34,13 @@ public class JourneyPlanner extends GUI {
 
     @Override
     protected void onSearch() {
+        if(stopSearcher == null)
+            return;
 
+        String query = getSearchBox().getText();
+        String result = stopSearcher.searchPrefix(query).stream().map(Objects::toString).collect(Collectors.joining("\n"));
+
+        getTextOutputArea().setText(result);
     }
 
     @Override
