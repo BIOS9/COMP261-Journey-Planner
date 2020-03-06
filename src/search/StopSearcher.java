@@ -1,7 +1,6 @@
 package search;
 
 import common.Stop;
-import sun.awt.X11.XSystemTrayPeer;
 
 import java.util.ArrayList;
 import java.util.Collection;

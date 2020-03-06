@@ -1,10 +1,8 @@
 package gui;
 
-import com.sun.imageio.plugins.wbmp.WBMPImageReader;
 import common.Location;
 import common.Stop;
 import io.JourneyReader;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 import search.PrefixMatch;
 import search.StopSearcher;
 

@@ -1,7 +1,5 @@
 package gui;
 
-import sun.awt.X11.XSystemTrayPeer;
-
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Graphics;
