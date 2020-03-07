@@ -50,6 +50,12 @@ public class StopSearcher {
             return matches;
         }
 
+        // Returns a single node if the query was matched exactly.
+        if(node.hasStop()) {
+            node.getStops().forEach(matches::add);
+            return matches;
+        }
+
         // Depth first search for leaf nodes.
         Stack<StopNode> searchNodes = new Stack<>();
         searchNodes.push(node);
