@@ -4,12 +4,13 @@ import common.Location;
 import common.Stop;
 import common.Trip;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.FileReader;
-import java.io.BufferedReader;
+import java.io.*;
+import java.nio.file.Files;
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Reads files containing stops and trips from files on a disk.
@@ -27,11 +28,11 @@ public class JourneyReader {
      *
      * @param stopsFile Stops file to load.
      * @param tripsFile Trips file to load.
-     * @throws IOException When an error occurs finding or reading the specified file.
-     * @throws ParseException When the data does not meet the expected format.
      * @return A collection containing all of the stops linked together with trip information.
+     * @throws IOException    When an error occurs finding or reading the specified file.
+     * @throws ParseException When the data does not meet the expected format.
      */
-    public static Collection<Stop> getConnectedStops(File stopsFile, File tripsFile) throws IOException, ParseException {
+    public static Collection<Stop> getConnectedStops(File stopsFile, File tripsFile) throws IOException, ParseError {
         Map<String, Stop> stops = readStops(stopsFile);
         Map<Trip, String[]> trips = readTrips(tripsFile);
 
@@ -42,14 +43,14 @@ public class JourneyReader {
                 Stop stop = stops.get(stopId);
 
                 // Ensure the stop listed in the trip exists.
-                if(stop == null)
-                    throw new ParseException("Trip contains stop that was not found.", 0);
+                if (stop == null)
+                    throw new ParseError("Trip contains stop that was not found.");
 
                 // Add the stop to the trip.
                 tripEntry.getKey().addStop(stop);
 
                 // Connects the current stop with the previous stop, skips the first stop.
-                if(previousStop != null) {
+                if (previousStop != null) {
                     // Making two connections so the trip can go through the stop travelling
                     // in any direction.
                     stop.makeConnection(previousStop, tripEntry.getKey());
@@ -63,7 +64,7 @@ public class JourneyReader {
         }
 
         // Prevent further modification of the stops.
-        for(Stop stop : stops.values()) {
+        for (Stop stop : stops.values()) {
             stop.lockConnections();
         }
 
@@ -75,84 +76,73 @@ public class JourneyReader {
      * Reads stops from a file into a map.
      *
      * @param file File to read.
-     * @throws IOException When an error occurs finding or reading the specified file.
-     * @throws ParseException When the data does not meet the expected format.
      * @return Map with the Stop ID as the key and Stop object as the value.
+     * @throws IOException    When an error occurs finding or reading the specified file.
+     * @throws ParseException When the data does not meet the expected format.
      */
-    private static Map<String, Stop> readStops(File file) throws IOException, ParseException {
-        BufferedReader reader = new BufferedReader(new FileReader(file));
-        Map<String, Stop> stops = new HashMap<>();
+    private static Map<String, Stop> readStops(File file) throws IOException, ParseError {
+        Stream<String> stream = Files.lines(file.toPath());
 
-        reader.readLine(); // Skip the file header
-        int lineNum = 1;
+        AtomicInteger lineNumber = new AtomicInteger(2);
+        return stream.skip(1).map(lines -> {
+            String[] tokens = lines.split("\t"); // Split line into tab separated values.
 
-        String line;
-        while((line = reader.readLine()) != null) {
-            ++lineNum;
-            String[] tokens = line.split("\t"); // Split line into tab separated values.
+            int lineNum = lineNumber.getAndIncrement(); // Not safe for parallel
 
-            // Ensure all tokens are present.
-            if(tokens.length < 4)
-                throw new ParseException(String.format("Missing data on line %d. Not enough tokens found.", lineNum), lineNum);
+            if (tokens.length != 4)
+                throw new ParseError(String.format("Invalid data on line %d of stops file. Invalid number of tokens found.", lineNum));
 
             String id = tokens[0];
             String name = tokens[1];
             double latitude;
             double longitude;
 
-            // Ensure latitude and longitude are doubles.
+            // Try parse latitude.
             try {
                 latitude = Double.parseDouble(tokens[2]);
             } catch (NumberFormatException ex) {
-                throw new ParseException(String.format("Invalid latitude on line %d. Expected double, got %s", lineNum, tokens[2]), lineNum);
+                throw new ParseError(String.format("Invalid latitude on line %d of stops file. Expected double, got %s", lineNum, tokens[2]));
             }
 
+            // Try parse longitude.
             try {
                 longitude = Double.parseDouble(tokens[3]);
             } catch (NumberFormatException ex) {
-                throw new ParseException(String.format("Invalid longitude on line %d. Expected double, got %s", lineNum, tokens[3]), lineNum);
+                throw new ParseError(String.format("Invalid longitude on line %d of stops file. Expected double, got %s", lineNum, tokens[3]));
             }
 
-            // Check duplicate stops, and add the stop to the collection.
-            if(stops.put(id, new Stop(id, name, Location.newFromLatLon(latitude, longitude))) != null)
-                throw new ParseException(String.format("Duplicate stop found %s", id), lineNum);
-        }
-
-        return stops;
+            return new Stop(id, name, Location.newFromLatLon(latitude, longitude));
+        }).collect(Collectors.toMap(Stop::getId, stop -> stop, (stop1, stop2) -> {
+            throw new ParseError(String.format("Duplicate stop found: %s", stop1.getId())); // Merge function called when multiple element have same key.
+        }));
     }
 
     /**
      * Reads trips from a file into a map.
      *
      * @param file File to read.
-     * @throws IOException When an error occurs finding or reading the specified file.
-     * @throws ParseException When the data does not meet the expected format.
      * @return Map of trips where the key is the trip and the value is an array of stops.
+     * @throws IOException    When an error occurs finding or reading the specified file.
+     * @throws ParseException When the data does not meet the expected format.
      */
-    private static Map<Trip, String[]> readTrips(File file) throws IOException, ParseException {
-        BufferedReader reader = new BufferedReader(new FileReader(file));
-        Map<Trip, String[]> trips = new HashMap<>();
+    private static Map<Trip, String[]> readTrips(File file) throws IOException, ParseError {
+        Stream<String> stream = Files.lines(file.toPath());
 
-        reader.readLine(); // Skip the file header
-        int lineNum = 1;
+        AtomicInteger lineNumber = new AtomicInteger(2);
+        return stream.skip(1).map(lines -> {
+            String[] tokens = lines.split("\t"); // Split line into tab separated values.
 
-        String line;
-        while((line = reader.readLine()) != null) {
-            ++lineNum;
-            String[] tokens = line.split("\t"); // Split line into tab separated values.
+            int lineNum = lineNumber.getAndIncrement(); // Not safe for parallel.
 
-            // Ensure all tokens are present.
-            if(tokens.length < 1)
-                throw new ParseException(String.format("Missing data on line %d. Not enough tokens found.", lineNum), lineNum);
+            if (tokens.length < 2)
+                throw new ParseError(String.format("Invalid data on line %d of trips file. No stops found.", lineNum));
 
             String id = tokens[0];
-            String[] stopIDs = Arrays.stream(tokens).skip(1).toArray(String[]::new);
+            String[] stopIDs = Arrays.stream(tokens).skip(1).toArray(String[]::new); // Skip first element to get bus stops.
 
-            // Check duplicate trips, and add the trip to the collection.
-            if(trips.put(new Trip(id), stopIDs) != null)
-                throw new ParseException(String.format("Duplicate trip found %s", id), lineNum);
-        }
-
-        return trips;
+            return new UnlinkedTrip(new Trip(id), stopIDs);
+        }).collect(Collectors.toMap(UnlinkedTrip::getTrip, UnlinkedTrip::getStopIDs, (trip1, trip2) -> {
+            throw new ParseError(String.format("Duplicate trip found.")); // Merge function called when multiple element have same key.
+        }));
     }
 }

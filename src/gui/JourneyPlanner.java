@@ -3,6 +3,7 @@ package gui;
 import common.Location;
 import common.Stop;
 import io.JourneyReader;
+import io.ParseError;
 import search.PrefixMatch;
 import search.StopSearcher;
 
@@ -148,7 +149,7 @@ public class JourneyPlanner extends GUI {
             System.out.println();
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(null, "There was an error reading one of the files: " + ex.getMessage(), "Error Reading File", JOptionPane.ERROR_MESSAGE);
-        } catch (ParseException ex) {
+        } catch (ParseError ex) {
             JOptionPane.showMessageDialog(null, "Invalid data encountered while reading one of the files: " + ex.getMessage(), "Error Parsing File", JOptionPane.ERROR_MESSAGE);
         }
     }
