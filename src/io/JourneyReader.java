@@ -19,9 +19,6 @@ import java.util.stream.Stream;
  * @author Matthew Corfiatis
  */
 public class JourneyReader {
-    public static final String DEFAULT_STOPS_FILE = "stops.txt";
-    public static final String DEFAULT_TRIPS_FILE = "trips.txt";
-
     /**
      * Reads stops and trips from file, then connects stops using the
      * information from the set of trips.

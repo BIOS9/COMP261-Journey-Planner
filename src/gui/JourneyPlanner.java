@@ -32,8 +32,8 @@ public class JourneyPlanner extends GUI {
 
     private static final double ZOOM_SCALE_CHANGE = 0.3;
     private static final double ZOOM_SCROLL_SCALE_CHANGE = 0.1;
-    private static final double MIN_SCALE = 1;
-    private static final double MAX_SCALE = 1000;
+    private static final double MIN_SCALE = 0.1;
+    private static final double MAX_SCALE = 10000;
     private static final double MOVE_CHANGE = 30;
     private double scale = 20;
     private double originX = 0;
@@ -45,8 +45,6 @@ public class JourneyPlanner extends GUI {
     protected void redraw(Graphics g) {
         if(stops == null)
             return;
-
-
 
         Dimension drawingAreaSize = getDrawingAreaDimension();
         Location origin = new Location(originX, originY);
