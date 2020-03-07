@@ -38,32 +38,15 @@ public class StopSearcher {
     public Collection<PrefixMatch> searchPrefix(String name) {
         List<PrefixMatch> matches = new ArrayList<>();
 
+        // TODO: Return one stop if the name matches exactly.
+
         if (name == null || name.length() == 0)
             return matches;
 
+        StopNode node = findNode(name.toLowerCase());
 
-        String query = name.toLowerCase();
-        StopNode node = trieRoot;
-        boolean resultsFound = true;
-
-        // Find node with path matching search prefix.
-        for (int i = 0; i < query.length(); ++i) {
-            if (node.hasChild(query.charAt(i))) {
-                node = node.getChild(query.charAt(i));
-            } else {
-                resultsFound = false;
-                break;
-            }
-        }
-
-        if (!resultsFound) {
+        if (node == null) {
             matches.add(new PrefixMatch("No results found.", null));
-            return matches;
-        }
-
-        if(node.hasStop()) {
-            Stop stop = node.getStop();
-            matches.add(new PrefixMatch(node.isId() ? stop.getId() : stop.getName(), stop));
             return matches;
         }
 
@@ -74,14 +57,11 @@ public class StopSearcher {
         while (!searchNodes.isEmpty()) {
             StopNode searchNode = searchNodes.pop();
 
-            if (searchNode.hasStop()) {
-                Stop stop = searchNode.getStop();
-                PrefixMatch match = new PrefixMatch(searchNode.isId() ? stop.getId() : stop.getName(), stop);
-                matches.add(match);
-            } else {
-                for (StopNode childNode : searchNode.getChildren()) {
-                    searchNodes.push(childNode);
-                }
+            if (searchNode.hasStop())
+                searchNode.getStops().forEach(matches::add);
+
+            for (StopNode childNode : searchNode.getChildren()) {
+                searchNodes.push(childNode);
             }
         }
 
@@ -108,6 +88,30 @@ public class StopSearcher {
         for (StopNode child : node.getChildren()) {
             printNodes(child, space + "  ");
         }
+    }
+
+    /**
+     * Find node with path matching search prefix.
+     * @param query
+     * @return
+     */
+    private StopNode findNode(String query) {
+        StopNode node = trieRoot;
+        boolean resultsFound = true;
+
+        for (int i = 0; i < query.length(); ++i) {
+            if (node.hasChild(query.charAt(i))) {
+                node = node.getChild(query.charAt(i));
+            } else {
+                resultsFound = false;
+                break;
+            }
+        }
+
+        if(!resultsFound)
+            return null;
+
+        return node;
     }
 
     /**
@@ -149,7 +153,7 @@ public class StopSearcher {
      * @param stop Stop to add.
      * @param tag  Tag to add the stop as. (Name or ID)
      */
-    private void addStop(Stop stop, String tag, boolean isId) {
+    private void addStop(Stop stop, String tag, boolean useId) {
         StopNode node = trieRoot;
 
         if (stop == null)
@@ -161,7 +165,7 @@ public class StopSearcher {
         // Add path to leaf node
         char[] chars = tag.toCharArray();
 
-        for (int i = 0; i < chars.length - 1; ++i) {
+        for (int i = 0; i < chars.length; ++i) {
             char c = chars[i];
             if (node.hasChild(c))
                 node = node.getChild(c);
@@ -169,11 +173,6 @@ public class StopSearcher {
                 node = node.addChild(c, new StopNode(c));
         }
 
-        // Add leaf node.
-        char finalChar = chars[chars.length - 1];
-
-        // TODO: Restructure nodes to contain result nodes
-        // TODO: Fix unable to add "app" because "apple" already exists, cant add multiple nodes to same path. Nodes need to have collection of matched stopNodes so multiple can be added
-        node.addChild(finalChar, new StopNode(finalChar, stop, isId));
+        node.addStop(stop, useId);
     }
 }

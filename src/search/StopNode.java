@@ -2,9 +2,7 @@ package search;
 
 import common.Stop;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A node in a trie structure that contains a character in the name of a
@@ -16,7 +14,7 @@ class StopNode {
     private final boolean isRoot;
     private final boolean isId;
     private final char nameCharacter;
-    private final Stop stop;
+    private final List<PrefixMatch> stops = new ArrayList<>();
     private final Map<Character, StopNode> children = new HashMap<>();
     private boolean childrenLocked;
 
@@ -26,7 +24,6 @@ class StopNode {
     public StopNode() {
         this.isRoot = true;
         this.nameCharacter = 0;
-        this.stop = null;
         this.isId = false;
     }
 
@@ -37,29 +34,15 @@ class StopNode {
     public StopNode(char nameCharacter) {
         this.isRoot = false;
         this.nameCharacter = nameCharacter;
-        this.stop = null;
         this.isId = false;
-    }
-
-    /**
-     * Constructor for constructing a leaf node.
-     * @param nameCharacter Character in the bus stop name.
-     * @param stop Stop to store.
-     * @param isId Whether the prefix is a stop ID instead of a stop name.
-     */
-    public StopNode(char nameCharacter, Stop stop, boolean isId) {
-        this.isRoot = false;
-        this.nameCharacter = nameCharacter;
-        this.stop = stop;
-        this.isId = isId;
     }
 
     public char getNameCharacter() {
         return nameCharacter;
     }
 
-    public Stop getStop() {
-        return stop;
+    public List<PrefixMatch> getStops() {
+        return Collections.unmodifiableList(stops);
     }
 
     public boolean isId() {
@@ -72,7 +55,19 @@ class StopNode {
      * @return Boolean indicating if this is a leaf node and contains a Stop.
      */
     public boolean hasStop() {
-        return stop != null;
+        return !stops.isEmpty();
+    }
+
+    /**
+     * Adds a stop to the list of stops that match the path in the trie.
+     * @param stop The stop to add.
+     * @param useId Whether the string value to be matched should use the ID or the name of the stop.
+     */
+    public void addStop(Stop stop, boolean useId) {
+        if(childrenLocked)
+            throw new IllegalAccessError("Cannot add stop locked node.");
+
+        stops.add(new PrefixMatch(useId ? stop.getId() : stop.getName(), stop));
     }
 
     /**

@@ -144,7 +144,7 @@ public class JourneyPlanner extends GUI {
         try {
             stops = JourneyReader.getConnectedStops(stopFile, tripFile);
             stopSearcher = new StopSearcher(stops);
-            System.out.println();
+            stopSearcher.printTrie();
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(null, "There was an error reading one of the files: " + ex.getMessage(), "Error Reading File", JOptionPane.ERROR_MESSAGE);
         } catch (ParseError ex) {
