@@ -38,8 +38,6 @@ public class StopSearcher {
     public Collection<PrefixMatch> searchPrefix(String name) {
         List<PrefixMatch> matches = new ArrayList<>();
 
-        // TODO: Return one stop if the name matches exactly.
-
         if (name == null || name.length() == 0)
             return matches;
 
