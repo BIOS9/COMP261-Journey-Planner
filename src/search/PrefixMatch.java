@@ -4,6 +4,8 @@ import common.Stop;
 
 /**
  * A search result for a prefix search and the stop that matches the prefix
+ *
+ * @author Matthew Corfiatis
  */
 public class PrefixMatch {
     private final String tokenMatched;

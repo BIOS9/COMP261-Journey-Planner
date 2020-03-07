@@ -46,7 +46,8 @@ public class JourneyPlanner extends GUI {
 
         Set<Stop> selectedTripStops = new HashSet<>();
 
-        // TODO: Draw links between trips and highlight them different colours
+        // TODO: Draw links between trips and highlight them different colours.
+        // TODO: Use assertions.
         //if(selectedStops != null)
         //    selectedStops.stream().flatMap(x -> x.getConnections().stream()).flatMap(x -> x.getTrip().getStops().stream()).collect(Collectors.toSet());
         Dimension drawingAreaSize = getDrawingAreaDimension();
