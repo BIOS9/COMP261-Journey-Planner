@@ -1,7 +1,9 @@
 package gui;
 
+import common.Connection;
 import common.Location;
 import common.Stop;
+import common.Trip;
 import io.JourneyReader;
 import io.ParseError;
 import search.PrefixMatch;
@@ -13,11 +15,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.io.File;
 import java.io.IOException;
-import java.text.ParseException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -43,17 +41,24 @@ public class JourneyPlanner extends GUI {
 
     @Override
     protected void redraw(Graphics g) {
-        if(stops == null)
+        if (stops == null)
             return;
 
+        Set<Stop> selectedTripStops = new HashSet<>();
+
+        // TODO: Draw links between trips and highlight them different colours
+        //if(selectedStops != null)
+        //    selectedStops.stream().flatMap(x -> x.getConnections().stream()).flatMap(x -> x.getTrip().getStops().stream()).collect(Collectors.toSet());
         Dimension drawingAreaSize = getDrawingAreaDimension();
         Location origin = new Location(originX, originY);
 
         int size = 5;
 
-        for(Stop stop : stops) {
-            if(selectedStops.contains(stop))
+        for (Stop stop : stops) {
+            if (selectedStops.contains(stop))
                 g.setColor(Color.RED);
+            else if (selectedTripStops.contains(stop))
+                g.setColor(Color.GREEN);
             else
                 g.setColor(Color.BLACK);
 
@@ -89,7 +94,7 @@ public class JourneyPlanner extends GUI {
 
     @Override
     protected void onSearch() {
-        if(stopSearcher == null)
+        if (stopSearcher == null)
             return;
 
         String query = getSearchBox().getText();
@@ -104,23 +109,23 @@ public class JourneyPlanner extends GUI {
     protected void onMouseWheelMove(MouseWheelEvent e) {
         scale -= e.getWheelRotation() * ZOOM_SCROLL_SCALE_CHANGE * scale;
 
-        if(scale > MAX_SCALE)
+        if (scale > MAX_SCALE)
             scale = MAX_SCALE;
-        if(scale < MIN_SCALE)
+        if (scale < MIN_SCALE)
             scale = MIN_SCALE;
     }
 
     @Override
     protected void onMove(GUI.Move m) {
-        switch(m) {
+        switch (m) {
             case ZOOM_IN:
                 scale += ZOOM_SCALE_CHANGE * scale; // Scale multiplication normalizes zooming so the zooming speed remains constant.
-                if(scale > MAX_SCALE)
+                if (scale > MAX_SCALE)
                     scale = MAX_SCALE;
                 break;
             case ZOOM_OUT:
                 scale -= ZOOM_SCALE_CHANGE * scale;
-                if(scale < MIN_SCALE)
+                if (scale < MIN_SCALE)
                     scale = MIN_SCALE;
                 break;
 

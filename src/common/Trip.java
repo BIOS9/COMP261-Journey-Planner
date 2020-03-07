@@ -1,9 +1,6 @@
 package common;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Represents a bus trip consisting of multiple stops.
@@ -13,7 +10,7 @@ import java.util.Objects;
  */
 public class Trip {
     private final String id;
-    private final List<Stop> stops = new ArrayList<>();
+    private final Set<Stop> stops = new HashSet<>();
     private boolean lockStops;
 
     public Trip(String id) {
@@ -24,8 +21,8 @@ public class Trip {
         return id;
     }
 
-    public List<Stop> getStops() {
-        return Collections.unmodifiableList(stops);
+    public Set<Stop> getStops() {
+        return Collections.unmodifiableSet(stops);
     }
 
     /**
