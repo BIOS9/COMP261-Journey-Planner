@@ -10,7 +10,6 @@ import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Reads files containing stops and trips from files on a disk.
@@ -78,10 +77,9 @@ public class JourneyReader {
      * @throws ParseException When the data does not meet the expected format.
      */
     private static Map<String, Stop> readStops(File file) throws IOException, ParseError {
-        Stream<String> stream = Files.lines(file.toPath());
-
         AtomicInteger lineNumber = new AtomicInteger(2);
-        return stream.skip(1).map(lines -> {
+
+        return Files.lines(file.toPath()).skip(1).map(lines -> {
             String[] tokens = lines.split("\t"); // Split line into tab separated values.
 
             int lineNum = lineNumber.getAndIncrement(); // Not safe for parallel
@@ -123,10 +121,9 @@ public class JourneyReader {
      * @throws ParseException When the data does not meet the expected format.
      */
     private static Map<Trip, String[]> readTrips(File file) throws IOException, ParseError {
-        Stream<String> stream = Files.lines(file.toPath());
-
         AtomicInteger lineNumber = new AtomicInteger(2);
-        return stream.skip(1).map(lines -> {
+
+        return Files.lines(file.toPath()).skip(1).map(lines -> {
             String[] tokens = lines.split("\t"); // Split line into tab separated values.
 
             int lineNum = lineNumber.getAndIncrement(); // Not safe for parallel.

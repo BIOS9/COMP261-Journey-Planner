@@ -36,6 +36,7 @@ public class JourneyPlanner extends GUI {
     private double scale = 20;
     private double originX = 0;
     private double originY = 0;
+    Location origin = new Location(originX, originY);
     private double dragStartOriginX = 0;
     private double dragStartOriginY = 0;
 
@@ -51,7 +52,7 @@ public class JourneyPlanner extends GUI {
         //if(selectedStops != null)
         //    selectedStops.stream().flatMap(x -> x.getConnections().stream()).flatMap(x -> x.getTrip().getStops().stream()).collect(Collectors.toSet());
         Dimension drawingAreaSize = getDrawingAreaDimension();
-        Location origin = new Location(originX, originY);
+        origin = new Location(originX, originY);
 
         int size = 5;
 
@@ -64,8 +65,7 @@ public class JourneyPlanner extends GUI {
                 g.setColor(Color.BLACK);
 
             Point point = stop.getLocation().asPoint(origin, scale);
-            point.x += drawingAreaSize.width / 2;
-            point.y += drawingAreaSize.height / 2;
+            point.translate(drawingAreaSize.width / 2, drawingAreaSize.height / 2);
 
             g.fillRect(point.x, point.y, size, size);
         }
@@ -73,7 +73,21 @@ public class JourneyPlanner extends GUI {
 
     @Override
     protected void onClick(MouseEvent e) {
+        if(stopSearcher == null) // Don't try to search if no stops exist yet.
+            return;
 
+        // Find stop closest to pointer
+        Dimension drawingAreaSize = getDrawingAreaDimension();
+
+        Point cursorPoint = e.getPoint();
+        cursorPoint.translate(-drawingAreaSize.width / 2, -drawingAreaSize.height / 2);
+
+        Location cursorLocation = Location.newFromPoint(cursorPoint, origin, scale);
+        getTextOutputArea().setText(cursorLocation.toString());
+
+        Stop closest = stopSearcher.searchClosest(cursorLocation);
+        selectedStops.clear();
+        selectedStops.add(closest);
     }
 
     @Override
@@ -150,7 +164,6 @@ public class JourneyPlanner extends GUI {
         try {
             stops = JourneyReader.getConnectedStops(stopFile, tripFile);
             stopSearcher = new StopSearcher(stops);
-            stopSearcher.printTrie();
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(null, "There was an error reading one of the files: " + ex.getMessage(), "Error Reading File", JOptionPane.ERROR_MESSAGE);
         } catch (ParseError ex) {

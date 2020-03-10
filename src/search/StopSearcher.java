@@ -1,11 +1,14 @@
 package search;
 
+import common.Location;
 import common.Stop;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Manages indexing and searching for bus stops in the journey.
@@ -73,10 +76,68 @@ public class StopSearcher {
     }
 
     /**
+     * Finds the closest stop to a lat/long co-ordinate location.
+     * @param location Location to base the search.
+     * @return Closest stop or null if none found.
+     */
+    public Stop searchClosest(Location location) {
+        Stop closestStop = null;
+        double closestDistance = 0;
+
+        // Linear search. Slow
+        for(Stop s : getStops()) {
+            if(closestStop == null) {
+                closestStop = s;
+                closestDistance = s.getLocation().distance(location);
+                continue;
+            }
+            double newDistance = s.getLocation().distance(location);
+            if(newDistance < closestDistance) {
+                closestDistance = newDistance;
+                closestStop = s;
+            }
+        }
+
+        return closestStop;
+    }
+
+    /**
      * Prints trie into the console for debugging.
      */
     public void printTrie() {
         printNodes(trieRoot, "");
+    }
+
+    /**
+     * Streams all stops.
+     * @return A stream of all stops.
+     */
+    public Stream<Stop> streamStops() {
+        return getStops().stream();
+    }
+
+    /**
+     * Gets a collection of all stops.
+     * @return A collection of stops.
+     */
+    public Collection<Stop> getStops() {
+        List<Stop> stops = new ArrayList<>();
+
+        Stack<StopNode> searchNodes = new Stack<>();
+        searchNodes.push(trieRoot);
+
+        while (!searchNodes.isEmpty()) {
+            StopNode searchNode = searchNodes.pop();
+
+            if (searchNode.hasStop())
+                stops.addAll(searchNode.getStops().stream().map(PrefixMatch::getStop).collect(Collectors.toList()));
+
+            for (StopNode childNode : searchNode.getChildren()) {
+                searchNodes.push(childNode);
+            }
+        }
+
+        return stops;
     }
 
     /**

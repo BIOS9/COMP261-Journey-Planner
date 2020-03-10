@@ -391,6 +391,11 @@ public abstract class GUI {
 		drawing.addMouseListener(new MouseAdapter() {
 			public void mouseReleased(MouseEvent e) {
 				onMouseDragStop();
+				redraw();
+			}
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
 				onClick(e);
 				redraw();
 			}
