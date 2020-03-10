@@ -18,6 +18,11 @@ import java.util.stream.Collectors;
  * @author Matthew Corfiatis
  */
 public class JourneyReader {
+    // Statistics, not critical so can be static
+    private static int stopCount = 0;
+    private static int tripCount = 0;
+    private static int connectionCount = 0;
+
     /**
      * Reads stops and trips from file, then connects stops using the
      * information from the set of trips.
@@ -31,6 +36,9 @@ public class JourneyReader {
     public static Collection<Stop> getConnectedStops(File stopsFile, File tripsFile) throws IOException, ParseError {
         Map<String, Stop> stops = readStops(stopsFile);
         Map<Trip, String[]> trips = readTrips(tripsFile);
+
+        stopCount = stops.size();
+        tripCount = trips.size();
 
         for (Map.Entry<Trip, String[]> tripEntry : trips.entrySet()) {
             Stop previousStop = null;
@@ -53,6 +61,7 @@ public class JourneyReader {
                     // Add incoming and outgoing connections
                     stop.makeIncomingConnection(previousStop, tripEntry.getKey());
                     previousStop.makeOutgoingConnection(stop, tripEntry.getKey());
+                    ++connectionCount;
                 }
 
                 previousStop = stop;
@@ -140,5 +149,17 @@ public class JourneyReader {
         }).collect(Collectors.toMap(UnlinkedTrip::getTrip, UnlinkedTrip::getStopIDs, (trip1, trip2) -> {
             throw new ParseError(String.format("Duplicate trip found.")); // Merge function called when multiple element have same key.
         }));
+    }
+
+    public static int getStopCount() {
+        return stopCount;
+    }
+
+    public static int getTripCount() {
+        return tripCount;
+    }
+
+    public static int getConnectionCount() {
+        return connectionCount;
     }
 }

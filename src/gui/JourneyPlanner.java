@@ -27,12 +27,16 @@ public class JourneyPlanner extends GUI {
     private StopSearcher stopSearcher;
     private Collection<Stop> stops;
     private Set<Stop> selectedStops = new HashSet<>();
+    private Set<Trip> selectedTrips = new HashSet<>();
 
     private static final double ZOOM_SCALE_CHANGE = 0.3;
     private static final double ZOOM_SCROLL_SCALE_CHANGE = 0.1;
     private static final double MIN_SCALE = 0.1;
     private static final double MAX_SCALE = 10000;
     private static final double MOVE_CHANGE = 30;
+    private static final float STOP_SIZE = 0.15f;
+    private static final float OUTLINE_SIZE = 0.004f;
+    private static final int MIN_STOP_SIZE = 3;
     private double scale = 20;
     private double originX = 0;
     private double originY = 0;
@@ -42,32 +46,73 @@ public class JourneyPlanner extends GUI {
 
     @Override
     protected void redraw(Graphics g) {
+        Graphics2D g2d = (Graphics2D)g;
+
+        Dimension drawingAreaSize = getDrawingAreaDimension();
+        g2d.setColor(Color.decode("#212121"));
+        g2d.fillRect(0, 0, drawingAreaSize.width, drawingAreaSize.height);
+
         if (stops == null)
             return;
 
-        Set<Stop> selectedTripStops = new HashSet<>();
-
         // TODO: Draw links between trips and highlight them different colours.
         // TODO: Use assertions.
-        //if(selectedStops != null)
-        //    selectedStops.stream().flatMap(x -> x.getConnections().stream()).flatMap(x -> x.getTrip().getStops().stream()).collect(Collectors.toSet());
-        Dimension drawingAreaSize = getDrawingAreaDimension();
+
         origin = new Location(originX, originY);
 
-        int size = 5;
+        int size = (int)(scale * STOP_SIZE);
+        if(size < MIN_STOP_SIZE)
+            size = MIN_STOP_SIZE;
 
+        Map<Stop, Point> generatedStopPoints = new HashMap<>(); // Map of stop locations converted to points
         for (Stop stop : stops) {
-            if (selectedStops.contains(stop))
-                g.setColor(Color.RED);
-            else if (selectedTripStops.contains(stop))
-                g.setColor(Color.GREEN);
-            else
-                g.setColor(Color.BLACK);
-
             Point point = stop.getLocation().asPoint(origin, scale);
             point.translate(drawingAreaSize.width / 2, drawingAreaSize.height / 2);
 
-            g.fillRect(point.x, point.y, size, size);
+            generatedStopPoints.put(stop, point);
+        }
+
+        Set<Stop> selectedTripStops = new HashSet<>();
+
+        float tripHue = 0;
+        float hueStep = 1.0f/selectedTrips.size();
+
+        for(Trip trip : selectedTrips) {
+            Stop previousTripStop = null;
+
+            g2d.setColor(Color.getHSBColor(tripHue, 1, 1));
+            tripHue += hueStep;
+            for(Stop stop : trip.getStops()) {
+                if (previousTripStop == null) {
+                    previousTripStop = stop;
+                    continue;
+                }
+
+                Point point = generatedStopPoints.get(stop);
+                Point previousPoint = generatedStopPoints.get(previousTripStop);
+
+                g2d.drawLine(point.x, point.y, previousPoint.x, previousPoint.y);
+            }
+
+            selectedTripStops.addAll(trip.getStops());
+        }
+
+        for (Stop stop : stops) {
+            if (selectedStops.contains(stop))
+                g2d.setColor(Color.RED);
+            else if (selectedTripStops.contains(stop))
+                g2d.setColor(Color.GREEN);
+            else
+                g2d.setColor(Color.white);
+
+            Point point = generatedStopPoints.get(stop);
+
+            g2d.fillOval(point.x - (size / 2), point.y - (size / 2), size, size);
+
+            float penSize = (float)scale * OUTLINE_SIZE;
+            g2d.setStroke(new BasicStroke(penSize));
+            g2d.setColor(Color.black);
+            g2d.drawOval(point.x - (size / 2), point.y - (size / 2), size, size);
         }
     }
 
@@ -88,8 +133,13 @@ public class JourneyPlanner extends GUI {
         if(closest == null)
             return;
 
+        // Select stop.
         selectedStops = new HashSet<>();
         selectedStops.add(closest);
+
+        // Select trips going through stop.
+        selectedTrips = new HashSet<>();
+        selectedTrips.addAll(closest.getTrips());
 
         printStopInfo(closest);
     }
@@ -120,15 +170,29 @@ public class JourneyPlanner extends GUI {
         Collection<PrefixMatch> stops = stopSearcher.searchPrefix(query);
         if(stops.size() == 0) {
             getTextOutputArea().setText("No results found.");
-            selectedStops.clear();
+            selectedStops = new HashSet<>();
+            selectedTrips = new HashSet<>();
         } else if(stops.size() == 1) {
             Stop stop = stops.iterator().next().getStop();
+
+            // Select stop.
             selectedStops = new HashSet<>();
             selectedStops.add(stop);
+
+            // Select trips going through stop.
+            selectedTrips = new HashSet<>();
+            selectedTrips.addAll(stop.getTrips());
+
             printStopInfo(stops.iterator().next().getStop());
         } else {
             String result = stops.stream().map(Objects::toString).collect(Collectors.joining("\n"));
+
+            // Select stops.
             selectedStops = stops.stream().map(x -> x.getStop()).collect(Collectors.toSet());
+
+            // Select trips.
+            selectedTrips = selectedStops.stream().flatMap(x -> x.getTrips().stream()).collect(Collectors.toSet());
+
             getTextOutputArea().setText(result);
         }
     }
@@ -175,8 +239,21 @@ public class JourneyPlanner extends GUI {
     @Override
     protected void onLoad(File stopFile, File tripFile) {
         try {
+            selectedStops = new HashSet<>();
+            selectedTrips = new HashSet<>();
+
             stops = JourneyReader.getConnectedStops(stopFile, tripFile);
             stopSearcher = new StopSearcher(stops);
+
+            getTextOutputArea().setText(String.format(
+                    "Loaded:%n" +
+                    "Stops: %d%n" +
+                    "Trips: %d%n" +
+                    "Connections: %d",
+                    JourneyReader.getStopCount(),
+                    JourneyReader.getTripCount(),
+                    JourneyReader.getConnectionCount()
+            ));
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(null, "There was an error reading one of the files: " + ex.getMessage(), "Error Reading File", JOptionPane.ERROR_MESSAGE);
         } catch (ParseError ex) {

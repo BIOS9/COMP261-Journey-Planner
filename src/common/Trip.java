@@ -1,5 +1,6 @@
 package common;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -10,7 +11,7 @@ import java.util.*;
  */
 public class Trip {
     private final String id;
-    private final Set<Stop> stops = new HashSet<>();
+    private final List<Stop> stops = new ArrayList<>();
     private boolean lockStops;
 
     public Trip(String id) {
@@ -21,8 +22,8 @@ public class Trip {
         return id;
     }
 
-    public Set<Stop> getStops() {
-        return Collections.unmodifiableSet(stops);
+    public List<Stop> getStops() {
+        return Collections.unmodifiableList(stops);
     }
 
     /**
