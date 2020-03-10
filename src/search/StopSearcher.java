@@ -47,7 +47,6 @@ public class StopSearcher {
         StopNode node = findNode(name.toLowerCase());
 
         if (node == null) {
-            matches.add(new PrefixMatch("No results found.", null));
             return matches;
         }
 

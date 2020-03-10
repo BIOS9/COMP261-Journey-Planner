@@ -1,9 +1,6 @@
 package common;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Represents a bus stop.
@@ -16,7 +13,8 @@ public class Stop {
     private final String id;
     private final String name;
     private final Location location;
-    private final List<Connection> connections = new ArrayList<>();
+    private final List<Connection> outgoingConnections = new ArrayList<>();
+    private final List<Connection> incomingConnections = new ArrayList<>();
     private boolean lockConnections; // Prevents adding new connections once the object has been created.
 
     /**
@@ -53,8 +51,24 @@ public class Stop {
         return location;
     }
 
-    public List<Connection> getConnections() {
-        return Collections.unmodifiableList(connections);
+    public List<Connection> getOutgoingConnections() {
+        return Collections.unmodifiableList(outgoingConnections);
+    }
+
+    public List<Connection> getIncomingConnections() {
+        return Collections.unmodifiableList(incomingConnections);
+    }
+
+    public Set<Trip> getTrips() {
+        Set<Trip> trips = new HashSet<>();
+
+        for(Connection c : outgoingConnections)
+            trips.add(c.getTrip());
+
+        for(Connection c : incomingConnections)
+            trips.add(c.getTrip());
+
+        return trips;
     }
 
     /**
@@ -64,7 +78,7 @@ public class Stop {
      * @throws IllegalAccessError When method is called after the connections have been locked.
      * @throws IllegalArgumentException When non nullable arguments are null.
      */
-    public void makeConnection(Stop stop, Trip trip) throws IllegalAccessError, IllegalArgumentException {
+    public void makeOutgoingConnection(Stop stop, Trip trip) throws IllegalAccessError, IllegalArgumentException {
         if(stop == null)
             throw new IllegalArgumentException("Stop must not be null.");
 
@@ -73,7 +87,26 @@ public class Stop {
 
         if(lockConnections)
             throw new IllegalAccessError("Connections cannot be added on a locked object.");
-        connections.add(new Connection(stop, trip));
+        outgoingConnections.add(new Connection(stop, trip));
+    }
+
+    /**
+     * Creates a connection between another stop and this stop within a trip.
+     * @param stop Stop to connect from.
+     * @param trip The trip that contains the connection.
+     * @throws IllegalAccessError When method is called after the connections have been locked.
+     * @throws IllegalArgumentException When non nullable arguments are null.
+     */
+    public void makeIncomingConnection(Stop stop, Trip trip) throws IllegalAccessError, IllegalArgumentException {
+        if(stop == null)
+            throw new IllegalArgumentException("Stop must not be null.");
+
+        if(trip == null)
+            throw new IllegalArgumentException("Trip must not be null.");
+
+        if(lockConnections)
+            throw new IllegalAccessError("Connections cannot be added on a locked object.");
+        incomingConnections.add(new Connection(stop, trip));
     }
 
     /**

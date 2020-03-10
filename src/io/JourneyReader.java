@@ -47,10 +47,12 @@ public class JourneyReader {
 
                 // Connects the current stop with the previous stop, skips the first stop.
                 if (previousStop != null) {
-                    // Making two connections so the trip can go through the stop travelling
-                    // in any direction.
-                    stop.makeConnection(previousStop, tripEntry.getKey());
-                    previousStop.makeConnection(stop, tripEntry.getKey());
+                    // Trips are directional/directed, so we only add connection one way.
+                    // stop.makeConnection(previousStop, tripEntry.getKey());
+
+                    // Add incoming and outgoing connections
+                    stop.makeIncomingConnection(previousStop, tripEntry.getKey());
+                    previousStop.makeOutgoingConnection(stop, tripEntry.getKey());
                 }
 
                 previousStop = stop;

@@ -83,11 +83,15 @@ public class JourneyPlanner extends GUI {
         cursorPoint.translate(-drawingAreaSize.width / 2, -drawingAreaSize.height / 2);
 
         Location cursorLocation = Location.newFromPoint(cursorPoint, origin, scale);
-        getTextOutputArea().setText(cursorLocation.toString());
 
         Stop closest = stopSearcher.searchClosest(cursorLocation);
-        selectedStops.clear();
+        if(closest == null)
+            return;
+
+        selectedStops = new HashSet<>();
         selectedStops.add(closest);
+
+        printStopInfo(closest);
     }
 
     @Override
@@ -114,10 +118,19 @@ public class JourneyPlanner extends GUI {
 
         String query = getSearchBox().getText();
         Collection<PrefixMatch> stops = stopSearcher.searchPrefix(query);
-        String result = stops.stream().map(Objects::toString).collect(Collectors.joining("\n"));
-        selectedStops = stops.stream().map(x -> x.getStop()).collect(Collectors.toSet());
-        getTextOutputArea().setText(result);
-        redraw();
+        if(stops.size() == 0) {
+            getTextOutputArea().setText("No results found.");
+            selectedStops.clear();
+        } else if(stops.size() == 1) {
+            Stop stop = stops.iterator().next().getStop();
+            selectedStops = new HashSet<>();
+            selectedStops.add(stop);
+            printStopInfo(stops.iterator().next().getStop());
+        } else {
+            String result = stops.stream().map(Objects::toString).collect(Collectors.joining("\n"));
+            selectedStops = stops.stream().map(x -> x.getStop()).collect(Collectors.toSet());
+            getTextOutputArea().setText(result);
+        }
     }
 
     @Override
@@ -169,6 +182,31 @@ public class JourneyPlanner extends GUI {
         } catch (ParseError ex) {
             JOptionPane.showMessageDialog(null, "Invalid data encountered while reading one of the files: " + ex.getMessage(), "Error Parsing File", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    /**
+     * Prints information about a stop to the GUI window.
+     * @param stop Stop to print.
+     */
+    private void printStopInfo(Stop stop) {
+        StringBuilder builder = new StringBuilder();
+        for(Trip t : stop.getTrips()) {
+            builder.append(t.getId());
+            builder.append(", ");
+        }
+
+        String tripsString = builder.toString();
+        if(tripsString.length() > 2)
+            tripsString = tripsString.substring(0, tripsString.length() - 2);
+
+        getTextOutputArea().setText(String.format(
+                "Stop ID: %s%n" +
+                "Stop Name: %s%n" +
+                "Trips: %s",
+                stop.getId(),
+                stop.getName(),
+                tripsString
+        ));
     }
 
     public static void main(String[] args) {
