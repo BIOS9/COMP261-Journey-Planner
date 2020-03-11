@@ -189,9 +189,6 @@ public class StopSearcher {
 
         // Add stop ID's and names to the trie.
         for (Stop stop : stops) {
-            if(stop.getName().equals("app")) {
-                System.out.println("A");
-            }
             addStop(stop, stop.getId().toLowerCase(), true);
             addStop(stop, stop.getName().toLowerCase(), false);
         }

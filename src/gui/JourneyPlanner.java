@@ -92,6 +92,8 @@ public class JourneyPlanner extends GUI {
                 Point previousPoint = generatedStopPoints.get(previousTripStop);
 
                 g2d.drawLine(point.x, point.y, previousPoint.x, previousPoint.y);
+
+                previousTripStop = stop;
             }
 
             selectedTripStops.addAll(trip.getStops());
