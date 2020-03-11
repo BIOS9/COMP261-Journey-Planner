@@ -74,6 +74,7 @@ public class JourneyPlanner extends GUI {
 
         Set<Stop> selectedTripStops = new HashSet<>();
 
+        float tripWidth = 2;
         float tripHue = 0;
         float hueStep = 1.0f/selectedTrips.size();
 
@@ -91,6 +92,8 @@ public class JourneyPlanner extends GUI {
                 Point point = generatedStopPoints.get(stop);
                 Point previousPoint = generatedStopPoints.get(previousTripStop);
 
+                Stroke dashed = new BasicStroke(tripWidth, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{0.1f * (float)scale, 0.1f * (float)scale * tripHue}, 0);
+                g2d.setStroke(dashed);
                 g2d.drawLine(point.x, point.y, previousPoint.x, previousPoint.y);
 
                 previousTripStop = stop;
