@@ -55,7 +55,6 @@ public class JourneyPlanner extends GUI {
         if (stops == null)
             return;
 
-        // TODO: Draw links between trips and highlight them different colours.
         // TODO: Use assertions.
 
         origin = new Location(originX, originY);
@@ -92,6 +91,7 @@ public class JourneyPlanner extends GUI {
                 Point point = generatedStopPoints.get(stop);
                 Point previousPoint = generatedStopPoints.get(previousTripStop);
 
+                // Make dashed stroke
                 Stroke dashed = new BasicStroke(tripWidth, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{0.1f * (float)scale, 0.1f * (float)scale * tripHue}, 0);
                 g2d.setStroke(dashed);
                 g2d.drawLine(point.x, point.y, previousPoint.x, previousPoint.y);
