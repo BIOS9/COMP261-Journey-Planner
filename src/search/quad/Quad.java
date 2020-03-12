@@ -2,6 +2,10 @@ package search.quad;
 
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Represents a shape with 4 sides that can contain other quads or points.
@@ -9,6 +13,8 @@ import java.awt.geom.Rectangle2D;
  */
 public class Quad {
     public final Rectangle2D bounds;
+    private final List<Quad> children = new ArrayList<>();
+    private final Set<Point2D> points = new HashSet<>();
 
     public Quad(Rectangle2D bounds) {
         this.bounds = bounds;
