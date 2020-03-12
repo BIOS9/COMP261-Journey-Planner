@@ -1,4 +1,4 @@
-package search;
+package search.trie;
 
 import common.Stop;
 
@@ -10,7 +10,7 @@ import java.util.*;
  *
  * @author Matthew Corfiatis
  */
-class StopNode {
+public class StopNode {
     private final boolean isRoot;
     private final boolean isId;
     private final char nameCharacter;

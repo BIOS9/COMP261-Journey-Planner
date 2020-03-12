@@ -1,12 +1,11 @@
 package gui;
 
-import common.Connection;
 import common.Location;
 import common.Stop;
 import common.Trip;
 import io.JourneyReader;
 import io.ParseError;
-import search.PrefixMatch;
+import search.trie.PrefixMatch;
 import search.StopSearcher;
 
 import javax.swing.*;

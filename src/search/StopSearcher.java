@@ -2,12 +2,10 @@ package search;
 
 import common.Location;
 import common.Stop;
+import search.trie.PrefixMatch;
+import search.trie.StopNode;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Stack;
-import java.util.stream.Collectors;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -16,6 +14,7 @@ import java.util.stream.Stream;
  * @author Matthew Corfiatis
  */
 public class StopSearcher {
+    private final Collection<Stop> stops;
     private final StopNode trieRoot = new StopNode();
 
     /**
@@ -25,6 +24,7 @@ public class StopSearcher {
      * @param stops Stops to be indexed.
      */
     public StopSearcher(Collection<Stop> stops) {
+        this.stops = stops;
         buildTrie(stops);
     }
 
@@ -120,23 +120,7 @@ public class StopSearcher {
      * @return A collection of stops.
      */
     public Collection<Stop> getStops() {
-        List<Stop> stops = new ArrayList<>();
-
-        Stack<StopNode> searchNodes = new Stack<>();
-        searchNodes.push(trieRoot);
-
-        while (!searchNodes.isEmpty()) {
-            StopNode searchNode = searchNodes.pop();
-
-            if (searchNode.hasStop())
-                stops.addAll(searchNode.getStops().stream().map(PrefixMatch::getStop).collect(Collectors.toList()));
-
-            for (StopNode childNode : searchNode.getChildren()) {
-                searchNodes.push(childNode);
-            }
-        }
-
-        return stops;
+        return Collections.unmodifiableCollection(stops);
     }
 
     /**
