@@ -13,8 +13,9 @@ import java.util.Set;
  */
 public class Quad {
     public final Rectangle2D bounds;
+    private final Quad parent = null;
     private final List<Quad> children = new ArrayList<>();
-    private final Set<Point2D> points = new HashSet<>();
+    private final Set<QuadPoint> points = new HashSet<>();
 
     public Quad(Rectangle2D bounds) {
         this.bounds = bounds;
