@@ -15,4 +15,20 @@ public class QuadPoint {
         this.point = point;
         this.stop = stop;
     }
+
+    public Point2D getPoint() {
+        return point;
+    }
+
+    public Stop getStop() {
+        return stop;
+    }
+
+    @Override
+    public String toString() {
+        return "QuadPoint{" +
+                "point=" + point +
+                ", stop=" + stop +
+                '}';
+    }
 }

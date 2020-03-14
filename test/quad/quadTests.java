@@ -12,7 +12,7 @@ public class quadTests {
 
     @Test
     public void testCreateQuad() {
-        Quad quad = new Quad(100, 150, 200, 250);
+        Quad quad = new Quad(100, 150, 200, 250, 1);
         Rectangle2D bounds = quad.getBounds();
 
         assertEquals(100, bounds.getMinX());
@@ -25,7 +25,7 @@ public class quadTests {
 
     @Test
     public void testClosestPointExternal() {
-        Quad quad = new Quad(100, 150, 200, 250);
+        Quad quad = new Quad(100, 150, 200, 250, 1);
         Rectangle2D bounds = quad.getBounds();
 
         // Corners
@@ -68,7 +68,7 @@ public class quadTests {
 
     @Test
     public void testClosestPointInteral() {
-        Quad quad = new Quad(100, 150, 200, 250);
+        Quad quad = new Quad(100, 150, 200, 250, 1);
         Rectangle2D bounds = quad.getBounds();
 
         Point2D testPoint = new Point2D.Double(173, 300);
@@ -78,7 +78,7 @@ public class quadTests {
 
     @Test
     public void testClosestPointOnEdge() {
-        Quad quad = new Quad(100, 150, 200, 250);
+        Quad quad = new Quad(100, 150, 200, 250, 1);
         Rectangle2D bounds = quad.getBounds();
 
         // Left edge
@@ -100,7 +100,7 @@ public class quadTests {
 
     @Test
     public void testClosestPointOnCorner() {
-        Quad quad = new Quad(100, 150, 200, 250);
+        Quad quad = new Quad(100, 150, 200, 250, 1);
         Rectangle2D bounds = quad.getBounds();
 
         // top-left
@@ -122,7 +122,7 @@ public class quadTests {
 
     @Test
     public void testDistanceToQuad() {
-        Quad quad = new Quad(100, 150, 200, 250);
+        Quad quad = new Quad(100, 150, 200, 250, 1);
 
         assertEquals(50, quad.distanceToQuad(new Point2D.Double(50, 226)));
     }

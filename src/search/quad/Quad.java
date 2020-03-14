@@ -2,9 +2,8 @@ package search.quad;
 
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -13,20 +12,146 @@ import java.util.Set;
  */
 public class Quad {
     public final Rectangle2D bounds;
-    private final Quad parent = null;
-    private final List<Quad> children = new ArrayList<>();
+    public final int maxPoints;
+    public final Quad parent;
+    private Quad
+            northEast,
+            southEast,
+            southWest,
+            northWest;
+    private boolean divided = false;
     private final Set<QuadPoint> points = new HashSet<>();
 
-    public Quad(Rectangle2D bounds) {
+    public Quad(Rectangle2D bounds, int maxPoints) {
         this.bounds = bounds;
+        this.parent = null;
+        this.maxPoints = maxPoints;
     }
 
-    public Quad(double x, double y, double width, double height) {
+    public Quad(Rectangle2D bounds, Quad parent, int maxPoints) {
+        this.bounds = bounds;
+        this.parent = parent;
+        this.maxPoints = maxPoints;
+    }
+
+    public Quad(double x, double y, double width, double height, Quad parent, int maxPoints) {
         this.bounds = new Rectangle2D.Double(x, y, width, height);
+        this.parent = parent;
+        this.maxPoints = maxPoints;
+    }
+
+    public Quad(double x, double y, double width, double height, int maxPoints) {
+        this.bounds = new Rectangle2D.Double(x, y, width, height);
+        this.parent = null;
+        this.maxPoints = maxPoints;
     }
 
     public Rectangle2D getBounds() {
         return bounds;
+    }
+
+    /**
+     * Inserts a quad point into the quad tree.
+     * @param point
+     */
+    public boolean addPoint(QuadPoint point) {
+        if(!bounds.contains(point.getPoint()))
+            return false;
+
+        if(isDivided()) { // If this quad has already divided, the children can be put inside
+            if(northEast.addPoint(point))
+                return true;
+            if(southEast.addPoint(point))
+                return true;
+            if(southWest.addPoint(point))
+                return true;
+            if(northWest.addPoint(point))
+                return true;
+            return false;
+        } else if(points.size() == maxPoints) { // If divide is required
+            points.add(point);
+            return divide();
+        }
+
+        return points.add(point);
+    }
+
+    private boolean divide() {
+        if(divided)
+            return false;
+
+        double x = bounds.getX();
+        double y = bounds.getY();
+        double w = bounds.getWidth();
+        double h = bounds.getHeight();
+
+        northEast = new Quad(x + w/2, y, w/2, h/2, this, maxPoints);
+        southEast = new Quad(x + w/2, y + h/2, w/2, h/2, this, maxPoints);
+        southWest = new Quad(x, y + h/2, w/2, h/2, this, maxPoints);
+        northWest = new Quad(x, y, w/2, h/2, this, maxPoints);
+
+        divided = true;
+
+        for(QuadPoint p : points) {
+            if(!addPoint(p))
+                return false;
+        }
+        points.clear();
+
+        return true;
+    }
+
+    public boolean isDivided() {
+        return divided;
+    }
+
+    public boolean hasPoints() {
+        return !points.isEmpty();
+    }
+
+    public Set<Quad> getQuads() {
+        if(!isDivided())
+            return new HashSet<>();
+
+        Set<Quad> set = new HashSet<>();
+
+        set.add(northEast);
+        set.add(southEast);
+        set.add(southWest);
+        set.add(northWest);
+
+        return set;
+    }
+
+    public Set<QuadPoint> getPoints() {
+        return Collections.unmodifiableSet(points);
+    }
+
+    /**
+     * Returns all quads for this node and all child nodes.
+     */
+    public Set<Quad> getAllQuads() {
+        Set<Quad> set = new HashSet<>();
+        set.addAll(getQuads());
+
+        if(!isDivided())
+            return set;
+
+        set.addAll(northEast.getAllQuads());
+        set.addAll(southEast.getAllQuads());
+        set.addAll(southWest.getAllQuads());
+        set.addAll(northWest.getAllQuads());
+
+        return set;
+    }
+
+    public Rectangle2D getScreenBounds(Point2D origin, double scale, Point2D translate) {
+        double x = (bounds.getX() - origin.getX()) * scale;
+        double y = (origin.getY() - bounds.getMaxY()) * scale;
+        double width = bounds.getWidth() * scale;
+        double height = bounds.getHeight() * scale;
+
+        return new Rectangle2D.Double(x + translate.getX(), y + translate.getY(), width, height);
     }
 
     /**

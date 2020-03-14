@@ -5,13 +5,16 @@ import common.Stop;
 import common.Trip;
 import io.JourneyReader;
 import io.ParseError;
-import search.trie.PrefixMatch;
 import search.StopSearcher;
+import search.quad.Quad;
+import search.trie.PrefixMatch;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -33,12 +36,12 @@ public class JourneyPlanner extends GUI {
     private static final double MIN_SCALE = 0.1;
     private static final double MAX_SCALE = 10000;
     private static final double MOVE_CHANGE = 30;
-    private static final float STOP_SIZE = 0.15f;
+    private static final float STOP_SIZE = 0.10f;
     private static final float OUTLINE_SIZE = 0.004f;
     private static final int MIN_STOP_SIZE = 3;
-    private double scale = 20;
-    private double originX = 0;
-    private double originY = 0;
+    private double scale = 10;
+    private double originX = 0, originY = 0;
+    private double cursorX = 0, cursorY = 0;
     Location origin = new Location(originX, originY);
     private double dragStartOriginX = 0;
     private double dragStartOriginY = 0;
@@ -101,6 +104,7 @@ public class JourneyPlanner extends GUI {
             selectedTripStops.addAll(trip.getStops());
         }
 
+        // TODO: make draw method inside stop and trip?
         for (Stop stop : stops) {
             if (selectedStops.contains(stop))
                 g2d.setColor(Color.RED);
@@ -117,6 +121,15 @@ public class JourneyPlanner extends GUI {
             g2d.setStroke(new BasicStroke(penSize));
             g2d.setColor(Color.black);
             g2d.drawOval(point.x - (size / 2), point.y - (size / 2), size, size);
+        }
+
+        if(stopSearcher == null)
+            return;
+        g2d.setColor(Color.white);
+        for(Quad q : stopSearcher.getQuads()) {
+            Rectangle2D rect = q.getScreenBounds(new Point2D.Double(originX, originY), scale,
+                    new Point2D.Double(getDrawingAreaDimension().getWidth() / 2, getDrawingAreaDimension().getHeight() / 2));
+            g2d.drawRect((int)rect.getX(), (int)rect.getY(), (int)rect.getWidth(), (int)rect.getHeight());
         }
     }
 
@@ -155,6 +168,12 @@ public class JourneyPlanner extends GUI {
     }
 
     @Override
+    protected void onMouseMoved(double x, double y) {
+        cursorX = x;
+        cursorY = y;
+    }
+
+    @Override
     protected void onMouseDragStart() {
         dragStartOriginX = originX;
         dragStartOriginY = originY;
@@ -172,11 +191,11 @@ public class JourneyPlanner extends GUI {
 
         String query = getSearchBox().getText();
         Collection<PrefixMatch> stops = stopSearcher.searchPrefix(query);
-        if(stops.size() == 0) {
+        if(stops.size() == 0) { // If no results
             getTextOutputArea().setText("No results found.");
             selectedStops = new HashSet<>();
             selectedTrips = new HashSet<>();
-        } else if(stops.size() == 1) {
+        } else if(stops.size() == 1) { // If single result, display info
             Stop stop = stops.iterator().next().getStop();
 
             // Select stop.
@@ -188,7 +207,7 @@ public class JourneyPlanner extends GUI {
             selectedTrips.addAll(stop.getTrips());
 
             printStopInfo(stops.iterator().next().getStop());
-        } else {
+        } else { // If multiple stops highlight all
             String result = stops.stream().map(Objects::toString).collect(Collectors.joining("\n"));
 
             // Select stops.

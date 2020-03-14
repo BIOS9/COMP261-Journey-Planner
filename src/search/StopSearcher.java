@@ -2,6 +2,8 @@ package search;
 
 import common.Location;
 import common.Stop;
+import search.quad.Quad;
+import search.quad.QuadSearcher;
 import search.trie.PrefixMatch;
 import search.trie.PrefixSearcher;
 
@@ -17,6 +19,7 @@ import java.util.stream.Stream;
 public class StopSearcher {
     private final Collection<Stop> stops;
     private final PrefixSearcher prefixSearcher;
+    private final QuadSearcher quadSearcher;
 
     /**
      * Creates a StopSearcher object and indexes the provided stops to
@@ -27,6 +30,7 @@ public class StopSearcher {
     public StopSearcher(Collection<Stop> stops) {
         this.stops = stops;
         prefixSearcher = new PrefixSearcher(stops);
+        quadSearcher = new QuadSearcher(stops);
     }
 
     /**
@@ -83,6 +87,10 @@ public class StopSearcher {
      */
     public Collection<Stop> getStops() {
         return Collections.unmodifiableCollection(stops);
+    }
+
+    public Collection<Quad> getQuads() {
+        return quadSearcher.getQuads();
     }
 
 }

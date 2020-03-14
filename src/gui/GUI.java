@@ -1,34 +1,11 @@
 package gui;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.io.File;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
+import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.text.DefaultCaret;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.File;
 
 /**
  * This is a template gui.GUI that you can use for your mapping program. It is an
@@ -88,6 +65,13 @@ public abstract class GUI {
 	 * Is called whenever the mouse is dragged on the drawing area.
 	 */
 	protected abstract void onMouseDragged(double draggedX, double draggedY);
+
+	/**
+	 * Is called whenever the mouse is moved on the drawing area.
+	 * @param x Cursor X
+	 * @param y Cursor Y
+	 */
+	protected abstract void onMouseMoved(double x, double y);
 
 	/**
 	 * Is called whenever the mouse starts dragging.
@@ -417,6 +401,11 @@ public abstract class GUI {
 		drawing.addMouseMotionListener(new MouseAdapter() {
 			public void mouseDragged(MouseEvent mouseEvent) {
 				onMouseDragged(mouseEvent.getX() - mouseDownX, mouseEvent.getY() - mouseDownY);
+				redraw();
+			}
+
+			public void mouseMoved(MouseEvent e) {
+				onMouseMoved(e.getX(), e.getY());
 				redraw();
 			}
 		});
