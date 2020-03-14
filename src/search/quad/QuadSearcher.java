@@ -45,15 +45,11 @@ public class QuadSearcher {
      * @param points Points to generate the tree from.
      */
     private void buildTree(Collection<QuadPoint> points) {
-        // Add to bottom and right to make quad inclusive of all points.
-        maxY += 0.1;
-        maxX += 0.1;
-
         rootQuad = new Quad(minX, minY, maxX - minX, maxY - minY, 4);
         quads.add(rootQuad);
         for(QuadPoint p : points) {
             if(!rootQuad.addPoint(p))
-                System.out.println("Failed to add: " + p.toString());
+                throw new Error("Failed to add point to quadtree: " + p.toString());
         }
         quads.addAll(rootQuad.getAllQuads());
     }

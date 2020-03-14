@@ -35,13 +35,13 @@ public class Quad {
     }
 
     public Quad(double x, double y, double width, double height, Quad parent, int maxPoints) {
-        this.bounds = new Rectangle2D.Double(x, y, width, height);
+        this.bounds = new QuadRectangle(x, y, width, height);
         this.parent = parent;
         this.maxPoints = maxPoints;
     }
 
     public Quad(double x, double y, double width, double height, int maxPoints) {
-        this.bounds = new Rectangle2D.Double(x, y, width, height);
+        this.bounds = new QuadRectangle(x, y, width, height);
         this.parent = null;
         this.maxPoints = maxPoints;
     }
@@ -151,7 +151,7 @@ public class Quad {
         double width = bounds.getWidth() * scale;
         double height = bounds.getHeight() * scale;
 
-        return new Rectangle2D.Double(x + translate.getX(), y + translate.getY(), width, height);
+        return new QuadRectangle(x + translate.getX(), y + translate.getY(), width, height);
     }
 
     /**
