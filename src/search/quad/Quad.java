@@ -10,7 +10,7 @@ import java.util.stream.Stream;
  * 784
  * @author Matthew Corfiatis
  */
-public class Quad {
+public class Quad implements QuadItem {
     public final Rectangle2D bounds;
     public final int maxPoints;
     public final Quad parent;
@@ -259,7 +259,8 @@ public class Quad {
      * @param point Point to find the distance from.
      * @return A distance double.
      */
-    public double distanceToQuad(Point2D point) {
+    @Override
+    public double distance(Point2D point) {
         return point.distance(closestPointOnQuad(point));
     }
 

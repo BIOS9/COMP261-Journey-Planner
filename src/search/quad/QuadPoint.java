@@ -10,7 +10,7 @@ import java.util.Objects;
  *
  * @author Matthew Corfiatis
  */
-public class QuadPoint {
+public class QuadPoint implements QuadItem {
     private final Point2D point;
     private final Stop stop;
 
@@ -25,6 +25,11 @@ public class QuadPoint {
 
     public Stop getStop() {
         return stop;
+    }
+
+    @Override
+    public double distance(Point2D point) {
+        return this.point.distance(point);
     }
 
     @Override
@@ -48,4 +53,5 @@ public class QuadPoint {
     public int hashCode() {
         return Objects.hash(point, stop);
     }
+
 }

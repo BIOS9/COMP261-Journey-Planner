@@ -35,10 +35,61 @@ public class QuadSearcher {
      * @param location Location to base the search.
      * @return Closest stop or null if none found.
      */
-    public Stop searchClosest(Point2D location) {
-        Quad quad = rootQuad.findChild(location);
+    public Stop searchClosest(final Point2D location) {
+        return searchClosestPriorityQueue(location);
+        //return searchClosestElimination(location);
+    }
 
+    /**
+     * Uses priority queue implementation of closest neighbour search to find
+     * closest point to another point.
+     * @param location The point to search for the closest neighbour around.
+     * @return The closest stop or null if no stops found.
+     */
+    public Stop searchClosestPriorityQueue(final Point2D location) {
         quads.forEach(x -> x.ignored = false); // TODO: Delete
+
+        PriorityQueue<QuadItem> items = new PriorityQueue<QuadItem>(1, (i1, i2) -> {
+            double i1Dist = i1.distance(location);
+            double i2Dist = i2.distance(location);
+
+            if(i1Dist < i2Dist)
+                return -1;
+            else if(i1Dist > i2Dist)
+                return 1;
+
+            return 0;
+        });
+
+        items.addAll(quads);
+
+        while (!items.isEmpty()) {
+            QuadItem item = items.poll();
+
+            if(item instanceof Quad) {
+                Quad quad = (Quad)item;
+                if(quad.isDivided()) {
+                    items.addAll(quad.getQuads());
+                } else {
+                    items.addAll(quad.getPoints());
+                }
+            } else if(item instanceof QuadPoint) {
+                return ((QuadPoint)item).getStop();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Uses priority queue implementation of closest neighbour search to find
+     * closest point to another point.
+     * @param location The point to search for the closest neighbour around.
+     * @return The closest stop or null if no stops found.
+     */
+    public Stop searchClosestElimination(Point2D location) {
+        // Find the smallest quad that contains the location
+        Quad quad = rootQuad.findChild(location);
 
         QuadPoint nearestPoint;
         double nearestPointDistance;
@@ -46,21 +97,26 @@ public class QuadSearcher {
         if (quad == null)
             return null;
 
+        // Find any nearby point to use as initial reference point.
         QuadPoint nearbyPoint = quad.findNearbyPoint(location);
         if (nearbyPoint == null)
             return null;
         nearestPoint = nearbyPoint;
         nearestPointDistance = nearestPoint.getPoint().distance(location);
 
+        // The following two snippets are just to display how the quad tree works.
+        quads.forEach(x -> x.ignored = false); // TODO: Delete
         quads.forEach(x -> {
-            if(x.distanceToQuad(location) > nearestPointDistance)
+            if(x.distance(location) > nearestPointDistance)
                 x.ignored = true;
         }); // TODO: Delete
 
-        Set<QuadPoint> foundPoints = quads.stream().filter(x -> x.hasPoints() && x.distanceToQuad(location) <= nearestPointDistance)
+        // Get all points from quads that are within the range of the distance to the initial reference point.
+        Set<QuadPoint> foundPoints = quads.stream().filter(x -> x.hasPoints() && x.distance(location) <= nearestPointDistance)
                 .flatMap(x -> x.getPoints().stream())
                 .collect(Collectors.toSet());
 
+        // Use regular linear search on the remaining points.
         QuadPoint closest = null;
         double closestDistance = 0;
 

@@ -124,6 +124,6 @@ public class quadTests {
     public void testDistanceToQuad() {
         Quad quad = new Quad(100, 150, 200, 250, 1);
 
-        assertEquals(50, quad.distanceToQuad(new Point2D.Double(50, 226)));
+        assertEquals(50, quad.distance(new Point2D.Double(50, 226)));
     }
 }
