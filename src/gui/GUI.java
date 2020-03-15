@@ -2,10 +2,14 @@ package gui;
 
 import javax.swing.*;
 import javax.swing.border.Border;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.DefaultCaret;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
+import java.util.Collection;
 
 /**
  * This is a template gui.GUI that you can use for your mapping program. It is an
@@ -108,7 +112,7 @@ public abstract class GUI {
 	 * @return the JTextField used as a search box in the top-right, which can
 	 *         be queried for the string it contains.
 	 */
-	public JTextField getSearchBox() {
+	public JComboBox<String> getSearchBox() {
 		return search;
 	}
 
@@ -126,6 +130,20 @@ public abstract class GUI {
 	 */
 	public void redraw() {
 		frame.repaint();
+	}
+
+	public void clearSuggestions() {
+		search.removeAllItems();
+	}
+
+	public void addSuggestion(String suggestion) {
+		search.addItem(suggestion);
+	}
+
+	public void addAllSuggestions(Collection<String> suggestions) {
+		for (String s : suggestions) {
+			addSuggestion(s);
+		}
 	}
 
 	// --------------------------------------------------------------------
@@ -162,7 +180,7 @@ public abstract class GUI {
 	private JComponent drawing; // we customise this to make it a drawing pane.
 	private JTextArea textOutputArea;
 
-	private JTextField search;
+	private JComboBox<String> search;
 	private JFileChooser fileChooser;
 
 	private double mouseDownX = 0;
@@ -282,27 +300,40 @@ public abstract class GUI {
 		// next, make the search box at the top-right. we manually fix
 		// it's size, and add an action listener to call your code when
 		// the user presses enter.
-		search = new JTextField(SEARCH_COLS);
+		search = new AutoCompleteComboBox();
 		search.setMaximumSize(new Dimension(0, 25));
-		search.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+		((JTextComponent)search.getEditor().getEditorComponent()).getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void insertUpdate(DocumentEvent documentEvent) {
+				onSearch();
+				redraw();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent documentEvent) {
+				onSearch();
+				redraw();
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent documentEvent) {
 				onSearch();
 				redraw();
 			}
 		});
+		search.addFocusListener(new FocusListener() {
+			@Override
+			public void focusGained(FocusEvent focusEvent) {
+				search.setPopupVisible(true);
+			}
 
-		if (UPDATE_ON_EVERY_CHARACTER) {
-			// this forces an action event to fire on every key press, so the
-			// user doesn't need to hit enter for results.
-			search.addKeyListener(new KeyAdapter() {
-				public void keyReleased(KeyEvent e) {
-					// don't fire an event on backspace or delete
-					//if (e.getKeyCode() == 8 || e.getKeyCode() == 127)
-					//	return;
-					search.postActionEvent();
-				}
-			});
-		}
+			@Override
+			public void focusLost(FocusEvent focusEvent) {
+				search.setPopupVisible(true);
+			}
+		});
+
+
 
 		/*
 		 * next, make the top bar itself and arrange everything inside of it.

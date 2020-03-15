@@ -39,13 +39,14 @@ public class JourneyPlanner extends GUI {
     private static final float STOP_SIZE = 0.10f;
     private static final float OUTLINE_SIZE = 0.004f;
     private static final int MIN_STOP_SIZE = 3;
-    private static final boolean DISPLAY_QUADS = true;
+    private static final boolean DISPLAY_QUADS = false;
     private double scale = 10;
     private double originX = 0, originY = 0;
     private double cursorX = 0, cursorY = 0;
     Location origin = new Location(originX, originY);
     private double dragStartOriginX = 0;
     private double dragStartOriginY = 0;
+    private String previousSearchString = null;
 
     @Override
     protected void redraw(Graphics g) {
@@ -194,13 +195,46 @@ public class JourneyPlanner extends GUI {
         if (stopSearcher == null)
             return;
 
-        String query = getSearchBox().getText();
+        String query = (String) getSearchBox().getEditor().getItem();
+        if(query.length() == 0) {
+            return;
+        }
+
         Collection<PrefixMatch> stops = stopSearcher.searchPrefix(query);
+
         if (stops.size() == 0) { // If no results
             getTextOutputArea().setText("No results found.");
             selectedStops = new HashSet<>();
             selectedTrips = new HashSet<>();
+
+            SwingUtilities.invokeLater(() -> {
+                String text = (String) getSearchBox().getEditor().getItem();
+                if(text.equals(previousSearchString))
+                    return;
+
+                previousSearchString = text;
+
+                clearSuggestions();
+                getSearchBox().getEditor().setItem(text);
+            });
         } else if (stops.size() == 1) { // If single result, display info
+            SwingUtilities.invokeLater(() -> {
+                String text = (String) getSearchBox().getEditor().getItem();
+                if(text.equals(previousSearchString))
+                    return;
+
+                getSearchBox().setEditable(false);
+                clearSuggestions();
+                addAllSuggestions(stops.stream().map(Objects::toString).collect(Collectors.toList()));
+
+                getSearchBox().setEditable(true);
+                getSearchBox().getEditor().setItem(text);
+
+                getSearchBox().requestFocus();
+
+                previousSearchString = text;
+            });
+
             Stop stop = stops.iterator().next().getStop();
 
             // Select stop.
@@ -213,6 +247,21 @@ public class JourneyPlanner extends GUI {
 
             printStopInfo(stops.iterator().next().getStop());
         } else { // If multiple stops highlight all
+            SwingUtilities.invokeLater(() -> {
+                String text = (String) getSearchBox().getEditor().getItem();
+                if(text.equals(previousSearchString))
+                    return;
+
+                previousSearchString = text;
+
+                getSearchBox().setEditable(false);
+                clearSuggestions();
+                addSuggestion(text);
+                addAllSuggestions(stops.stream().map(Objects::toString).collect(Collectors.toList()));
+                getSearchBox().setEditable(true);
+                getSearchBox().getEditor().setItem(text);
+                getSearchBox().requestFocus();
+            });
             String result = stops.stream().map(Objects::toString).collect(Collectors.joining("\n"));
 
             // Select stops.
