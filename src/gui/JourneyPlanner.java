@@ -39,6 +39,7 @@ public class JourneyPlanner extends GUI {
     private static final float STOP_SIZE = 0.10f;
     private static final float OUTLINE_SIZE = 0.004f;
     private static final int MIN_STOP_SIZE = 3;
+    private static final boolean DISPLAY_QUADS = true;
     private double scale = 10;
     private double originX = 0, originY = 0;
     private double cursorX = 0, cursorY = 0;
@@ -48,7 +49,7 @@ public class JourneyPlanner extends GUI {
 
     @Override
     protected void redraw(Graphics g) {
-        Graphics2D g2d = (Graphics2D)g;
+        Graphics2D g2d = (Graphics2D) g;
 
         Dimension drawingAreaSize = getDrawingAreaDimension();
         g2d.setColor(Color.decode("#212121"));
@@ -57,12 +58,25 @@ public class JourneyPlanner extends GUI {
         if (stops == null)
             return;
 
+        if (stopSearcher != null && DISPLAY_QUADS) {
+            for (Quad q : stopSearcher.getQuads()) {
+                Rectangle2D rect = q.getScreenBounds(new Point2D.Double(originX, originY), scale,
+                        new Point2D.Double(getDrawingAreaDimension().getWidth() / 2, getDrawingAreaDimension().getHeight() / 2));
+
+                g2d.setColor(Color.gray);
+                if (q.ignored)
+                    g2d.fillRect((int) rect.getX(), (int) rect.getY(), (int) rect.getWidth(), (int) rect.getHeight());
+
+                g2d.setColor(Color.white);
+                g2d.drawRect((int) rect.getX(), (int) rect.getY(), (int) rect.getWidth(), (int) rect.getHeight());
+            }
+        }
         // TODO: Use assertions.
 
         origin = new Location(originX, originY);
 
-        int size = (int)(scale * STOP_SIZE);
-        if(size < MIN_STOP_SIZE)
+        int size = (int) (scale * STOP_SIZE);
+        if (size < MIN_STOP_SIZE)
             size = MIN_STOP_SIZE;
 
         Map<Stop, Point> generatedStopPoints = new HashMap<>(); // Map of stop locations converted to points
@@ -77,14 +91,14 @@ public class JourneyPlanner extends GUI {
 
         float tripWidth = 2;
         float tripHue = 0;
-        float hueStep = 1.0f/selectedTrips.size();
+        float hueStep = 1.0f / selectedTrips.size();
 
-        for(Trip trip : selectedTrips) {
+        for (Trip trip : selectedTrips) {
             Stop previousTripStop = null;
 
             g2d.setColor(Color.getHSBColor(tripHue, 1, 1));
             tripHue += hueStep;
-            for(Stop stop : trip.getStops()) {
+            for (Stop stop : trip.getStops()) {
                 if (previousTripStop == null) {
                     previousTripStop = stop;
                     continue;
@@ -94,7 +108,7 @@ public class JourneyPlanner extends GUI {
                 Point previousPoint = generatedStopPoints.get(previousTripStop);
 
                 // Make dashed stroke
-                Stroke dashed = new BasicStroke(tripWidth, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{0.1f * (float)scale, 0.1f * (float)scale * tripHue}, 0);
+                Stroke dashed = new BasicStroke(tripWidth, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{0.1f * (float) scale, 0.1f * (float) scale * tripHue}, 0);
                 g2d.setStroke(dashed);
                 g2d.drawLine(point.x, point.y, previousPoint.x, previousPoint.y);
 
@@ -117,25 +131,16 @@ public class JourneyPlanner extends GUI {
 
             g2d.fillOval(point.x - (size / 2), point.y - (size / 2), size, size);
 
-            float penSize = (float)scale * OUTLINE_SIZE;
+            float penSize = (float) scale * OUTLINE_SIZE;
             g2d.setStroke(new BasicStroke(penSize));
             g2d.setColor(Color.black);
             g2d.drawOval(point.x - (size / 2), point.y - (size / 2), size, size);
-        }
-
-        if(stopSearcher == null)
-            return;
-        g2d.setColor(Color.white);
-        for(Quad q : stopSearcher.getQuads()) {
-            Rectangle2D rect = q.getScreenBounds(new Point2D.Double(originX, originY), scale,
-                    new Point2D.Double(getDrawingAreaDimension().getWidth() / 2, getDrawingAreaDimension().getHeight() / 2));
-            g2d.drawRect((int)rect.getX(), (int)rect.getY(), (int)rect.getWidth(), (int)rect.getHeight());
         }
     }
 
     @Override
     protected void onClick(MouseEvent e) {
-        if(stopSearcher == null) // Don't try to search if no stops exist yet.
+        if (stopSearcher == null) // Don't try to search if no stops exist yet.
             return;
 
         // Find stop closest to pointer
@@ -147,7 +152,7 @@ public class JourneyPlanner extends GUI {
         Location cursorLocation = Location.newFromPoint(cursorPoint, origin, scale);
 
         Stop closest = stopSearcher.searchClosest(cursorLocation);
-        if(closest == null)
+        if (closest == null)
             return;
 
         // Select stop.
@@ -191,11 +196,11 @@ public class JourneyPlanner extends GUI {
 
         String query = getSearchBox().getText();
         Collection<PrefixMatch> stops = stopSearcher.searchPrefix(query);
-        if(stops.size() == 0) { // If no results
+        if (stops.size() == 0) { // If no results
             getTextOutputArea().setText("No results found.");
             selectedStops = new HashSet<>();
             selectedTrips = new HashSet<>();
-        } else if(stops.size() == 1) { // If single result, display info
+        } else if (stops.size() == 1) { // If single result, display info
             Stop stop = stops.iterator().next().getStop();
 
             // Select stop.
@@ -270,9 +275,9 @@ public class JourneyPlanner extends GUI {
 
             getTextOutputArea().setText(String.format(
                     "Loaded:%n" +
-                    "Stops: %d%n" +
-                    "Trips: %d%n" +
-                    "Connections: %d",
+                            "Stops: %d%n" +
+                            "Trips: %d%n" +
+                            "Connections: %d",
                     JourneyReader.getStopCount(),
                     JourneyReader.getTripCount(),
                     JourneyReader.getConnectionCount()
@@ -286,23 +291,24 @@ public class JourneyPlanner extends GUI {
 
     /**
      * Prints information about a stop to the GUI window.
+     *
      * @param stop Stop to print.
      */
     private void printStopInfo(Stop stop) {
         StringBuilder builder = new StringBuilder();
-        for(Trip t : stop.getTrips()) {
+        for (Trip t : stop.getTrips()) {
             builder.append(t.getId());
             builder.append(", ");
         }
 
         String tripsString = builder.toString();
-        if(tripsString.length() > 2)
+        if (tripsString.length() > 2)
             tripsString = tripsString.substring(0, tripsString.length() - 2);
 
         getTextOutputArea().setText(String.format(
                 "Stop ID: %s%n" +
-                "Stop Name: %s%n" +
-                "Trips: %s",
+                        "Stop Name: %s%n" +
+                        "Trips: %s",
                 stop.getId(),
                 stop.getName(),
                 tripsString

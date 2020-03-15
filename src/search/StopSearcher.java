@@ -7,6 +7,7 @@ import search.quad.QuadSearcher;
 import search.trie.PrefixMatch;
 import search.trie.PrefixSearcher;
 
+import java.awt.geom.Point2D;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Stream;
@@ -53,24 +54,25 @@ public class StopSearcher {
      * @return Closest stop or null if none found.
      */
     public Stop searchClosest(Location location) {
-        Stop closestStop = null;
-        double closestDistance = 0;
-
-        // Linear search. Slow
-        for(Stop s : getStops()) {
-            if(closestStop == null) {
-                closestStop = s;
-                closestDistance = s.getLocation().distance(location);
-                continue;
-            }
-            double newDistance = s.getLocation().distance(location);
-            if(newDistance < closestDistance) {
-                closestDistance = newDistance;
-                closestStop = s;
-            }
-        }
-
-        return closestStop;
+        return quadSearcher.searchClosest(new Point2D.Double(location.x, location.y));
+//        Stop closestStop = null;
+//        double closestDistance = 0;
+//
+//        // Linear search. Slow
+//        for(Stop s : getStops()) {
+//            if(closestStop == null) {
+//                closestStop = s;
+//                closestDistance = s.getLocation().distance(location);
+//                continue;
+//            }
+//            double newDistance = s.getLocation().distance(location);
+//            if(newDistance < closestDistance) {
+//                closestDistance = newDistance;
+//                closestStop = s;
+//            }
+//        }
+//
+//        return closestStop;
     }
 
     /**

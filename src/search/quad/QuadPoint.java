@@ -3,9 +3,12 @@ package search.quad;
 import common.Stop;
 
 import java.awt.geom.Point2D;
+import java.util.Objects;
 
 /**
  * Represents a point in a quad tree and an item associated with that point.
+ *
+ * @author Matthew Corfiatis
  */
 public class QuadPoint {
     private final Point2D point;
@@ -30,5 +33,19 @@ public class QuadPoint {
                 "point=" + point +
                 ", stop=" + stop +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        QuadPoint quadPoint = (QuadPoint) o;
+        return Objects.equals(point, quadPoint.point) &&
+                Objects.equals(stop, quadPoint.stop);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(point, stop);
     }
 }

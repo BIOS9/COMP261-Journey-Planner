@@ -2,12 +2,12 @@ package search.quad;
 
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * Represents a shape with 4 sides that can contain other quads or points.
+ * 784
  * @author Matthew Corfiatis
  */
 public class Quad {
@@ -21,6 +21,8 @@ public class Quad {
             northWest;
     private boolean divided = false;
     private final Set<QuadPoint> points = new HashSet<>();
+
+    public boolean ignored = false;
 
     public Quad(Rectangle2D bounds, int maxPoints) {
         this.bounds = bounds;
@@ -48,6 +50,51 @@ public class Quad {
 
     public Rectangle2D getBounds() {
         return bounds;
+    }
+
+    public Quad findChild(Point2D point) {
+        if(isDivided()) {
+            Optional<Quad> quad = streamQuads().map(x -> x.findChild(point)).filter(x -> x != null).findAny();
+            if(quad.isPresent())
+                return quad.get();
+        } else if(bounds.contains(point))
+            return this;
+
+        return null;
+    }
+
+    /**
+     * Finds any nearby point that can be used for first approximation of closest point.
+     * @param exclude Point to exclude from the search
+     * @return A QuadPoint object.
+     */
+    public QuadPoint findNearbyPoint(Point2D exclude) {
+        return findNearbyPoint(exclude, new HashSet<>());
+    }
+
+    private QuadPoint findNearbyPoint(Point2D exclude, Set<Quad> visited) {
+        if(visited.contains(this))
+            return null;
+
+        visited.add(this);
+
+        if(hasPoints()) {
+            Optional<QuadPoint> point = streamPoints().filter(x -> !x.getPoint().equals(exclude)).findAny();
+            if(point.isPresent())
+                return point.get();
+        }
+
+        for(Quad q : getQuads()) {
+            QuadPoint nearby = q.findNearbyPoint(exclude, visited);
+            if(nearby != null)
+                return nearby;
+        }
+
+        if(parent != null) {
+            return parent.findNearbyPoint(exclude, visited);
+        }
+
+        return null;
     }
 
     /**
@@ -125,6 +172,14 @@ public class Quad {
 
     public Set<QuadPoint> getPoints() {
         return Collections.unmodifiableSet(points);
+    }
+
+    public Stream<QuadPoint> streamPoints() {
+        return getPoints().stream();
+    }
+
+    public Stream<Quad> streamQuads() {
+        return getQuads().stream();
     }
 
     /**
@@ -206,5 +261,18 @@ public class Quad {
      */
     public double distanceToQuad(Point2D point) {
         return point.distance(closestPointOnQuad(point));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Quad quad = (Quad) o;
+        return Objects.equals(bounds, quad.bounds);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(bounds);
     }
 }
