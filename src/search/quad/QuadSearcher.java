@@ -47,8 +47,6 @@ public class QuadSearcher {
      * @return The closest stop or null if no stops found.
      */
     public Stop searchClosestPriorityQueue(final Point2D location) {
-        quads.forEach(x -> x.ignored = false); // TODO: Delete
-
         PriorityQueue<QuadItem> items = new PriorityQueue<QuadItem>(1, (i1, i2) -> {
             double i1Dist = i1.distance(location);
             double i2Dist = i2.distance(location);
@@ -61,7 +59,7 @@ public class QuadSearcher {
             return 0;
         });
 
-        items.addAll(quads);
+        items.add(rootQuad);
 
         while (!items.isEmpty()) {
             QuadItem item = items.poll();
@@ -103,13 +101,6 @@ public class QuadSearcher {
             return null;
         nearestPoint = nearbyPoint;
         nearestPointDistance = nearestPoint.getPoint().distance(location);
-
-        // The following two snippets are just to display how the quad tree works.
-        quads.forEach(x -> x.ignored = false); // TODO: Delete
-        quads.forEach(x -> {
-            if(x.distance(location) > nearestPointDistance)
-                x.ignored = true;
-        }); // TODO: Delete
 
         // Get all points from quads that are within the range of the distance to the initial reference point.
         Set<QuadPoint> foundPoints = quads.stream().filter(x -> x.hasPoints() && x.distance(location) <= nearestPointDistance)

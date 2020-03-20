@@ -64,10 +64,6 @@ public class JourneyPlanner extends GUI {
                 Rectangle2D rect = q.getScreenBounds(new Point2D.Double(originX, originY), scale,
                         new Point2D.Double(getDrawingAreaDimension().getWidth() / 2, getDrawingAreaDimension().getHeight() / 2));
 
-                g2d.setColor(Color.gray);
-                if (q.ignored)
-                    g2d.fillRect((int) rect.getX(), (int) rect.getY(), (int) rect.getWidth(), (int) rect.getHeight());
-
                 g2d.setColor(Color.white);
                 g2d.drawRect((int) rect.getX(), (int) rect.getY(), (int) rect.getWidth(), (int) rect.getHeight());
             }

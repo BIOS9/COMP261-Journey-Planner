@@ -22,8 +22,6 @@ public class Quad implements QuadItem {
     private boolean divided = false;
     private final Set<QuadPoint> points = new HashSet<>();
 
-    public boolean ignored = false;
-
     public Quad(Rectangle2D bounds, int maxPoints) {
         this.bounds = bounds;
         this.parent = null;
