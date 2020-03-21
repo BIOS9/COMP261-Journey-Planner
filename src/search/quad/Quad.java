@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 
 /**
  * Represents a shape with 4 sides that can contain other quads or points.
- * 784
+ *
  * @author Matthew Corfiatis
  */
 public class Quad implements QuadItem {
@@ -121,6 +121,9 @@ public class Quad implements QuadItem {
         return points.add(point);
     }
 
+    /**
+     * Divides this quad into four child quads.
+     */
     private boolean divide() {
         if(divided)
             return false;
@@ -137,6 +140,7 @@ public class Quad implements QuadItem {
 
         divided = true;
 
+        // Move any points in this quad to the children
         for(QuadPoint p : points) {
             if(!addPoint(p))
                 return false;
@@ -154,6 +158,9 @@ public class Quad implements QuadItem {
         return !points.isEmpty();
     }
 
+    /**
+     * Returns a set of quads that are direct children of this quad.
+     */
     public Set<Quad> getQuads() {
         if(!isDivided())
             return new HashSet<>();
@@ -198,6 +205,10 @@ public class Quad implements QuadItem {
         return set;
     }
 
+    /**
+     * Converts quad to a drawable rectangle with correct co-ordinates.
+     * @return a rectangle that can be drawn on screen.
+     */
     public Rectangle2D getScreenBounds(Point2D origin, double scale, Point2D translate) {
         double x = (bounds.getX() - origin.getX()) * scale;
         double y = (origin.getY() - bounds.getMaxY()) * scale;
